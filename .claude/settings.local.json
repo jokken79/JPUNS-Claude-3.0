@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git restore:*)",
+      "Bash(powershell:*)",
+      "Bash(docker:*)",
+      "Bash(curl:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(docker-compose stop:*)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose:*)",
+      "Bash(tree:*)",
+      "Bash(git add:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl -s http://localhost:3000/rirekisho.html)",
+      "Bash(curl -s http://localhost:3000/templates/rirekisho.html)",
+      "Read(//c/Users/JPUNS/Pictures/Screenshots/**)",
+      "Read(//c/Users/JPUNS/Desktop/**)",
+      "Bash(start chrome:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git log:*)",
+      "Bash(python:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)",
+      "Bash(timeout:*)",
+      "Bash(git checkout:*)",
+      "Bash(git reset:*)",
+      "Bash(find:*)",
+      "Read(//d/**)",
+      "Bash(cmd /c:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

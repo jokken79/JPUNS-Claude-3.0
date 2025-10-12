@@ -1,0 +1,45 @@
+====================================================
+ARCHIVOS DE BASE DE DATOS - DONDE COLOCARLOS
+====================================================
+
+ESTOS 2 ARCHIVOS ARREGLAN EL ERROR "candidates5" PARA SIEMPRE
+
+Archivo 1: 01_init_database.sql (15 KB)
+---------------------------------------
+¿Qué hace?
+- Crea todas las tablas de la BD
+- Inserta 5 empleados de prueba
+- Inserta 5 fábricas
+- Inserta 5 candidatos
+- Inserta usuario admin
+
+¿Dónde colocarlo?
+TU_PROYECTO/database/migrations/01_init_database.sql
+
+Ejemplo:
+D:\JPUNS-Claude.2.5.o\database\migrations\01_init_database.sql
+
+Si la carpeta no existe:
+mkdir database\migrations
+
+
+Archivo 2: verify_database.py (9 KB)
+-------------------------------------
+¿Qué hace?
+- Verifica que BD esté lista
+- Verifica que existan todas las tablas
+- Verifica que haya datos
+- Ejecuta SQL si falta algo
+
+¿Dónde colocarlo?
+TU_PROYECTO/backend/verify_database.py
+
+Ejemplo:
+D:\JPUNS-Claude.2.5.o\backend\verify_database.py
+
+
+====================================================
+IMPORTANTE: 
+Después de copiar estos archivos, ejecutar:
+reset-database.bat
+====================================================

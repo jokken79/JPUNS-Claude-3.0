@@ -1,0 +1,72 @@
+{
+    "name":  "uns-claudejp-frontend",
+    "version":  "3.0.0",
+    "description":  "UNS-ClaudeJP 3.0 Frontend - Sistema de Gestión de Personal Temporal",
+    "private":  true,
+    "dependencies":  {
+                         "@headlessui/react":  "^1.7.19",
+                         "@heroicons/react":  "^2.2.0",
+                         "@tanstack/react-query":  "^5.12.2",
+                         "ajv":  "^8.17.1",
+                         "ajv-keywords":  "^5.1.0",
+                         "axios":  "^1.6.2",
+                         "clsx":  "^2.1.1",
+                         "date-fns":  "^2.30.0",
+                         "npm-check-updates":  "^19.0.0",
+                         "react":  "^18.2.0",
+                         "react-datepicker":  "^4.21.0",
+                         "react-dom":  "^18.2.0",
+                         "react-dropzone":  "^14.2.3",
+                         "react-hook-form":  "^7.48.2",
+                         "react-hot-toast":  "^2.6.0",
+                         "react-router-dom":  "^6.20.0",
+                         "react-scripts":  "5.0.1",
+                         "recharts":  "^2.10.3",
+                         "tailwind-merge":  "^2.1.0",
+                         "zustand":  "^4.4.7"
+                     },
+    "devDependencies":  {
+                            "@testing-library/jest-dom":  "^6.1.5",
+                            "@testing-library/react":  "^13.4.0",
+                            "@testing-library/user-event":  "^14.5.1",
+                            "@types/jest":  "^29.5.8",
+                            "@types/node":  "^20.10.4",
+                            "@types/react":  "^18.2.42",
+                            "@types/react-dom":  "^18.2.17",
+                            "@typescript-eslint/eslint-plugin":  "^6.13.2",
+                            "@typescript-eslint/parser":  "^6.13.2",
+                            "autoprefixer":  "^10.4.16",
+                            "eslint":  "^8.55.0",
+                            "eslint-config-react-app":  "^7.0.1",
+                            "jest-environment-jsdom":  "^29.7.0",
+                            "postcss":  "^8.4.32",
+                            "tailwindcss":  "^3.3.6",
+                            "typescript":  "^4.9.5"
+                        },
+    "scripts":  {
+                    "start":  "react-scripts start",
+                    "build":  "react-scripts build",
+                    "test":  "react-scripts test --setupFilesAfterEnv=src/__tests__/setupTests.ts",
+                    "test:coverage":  "react-scripts test --coverage --watchAll=false",
+                    "test:ci":  "CI=true react-scripts test --coverage --watchAll=false --testResultsProcessor=jest-junit",
+                    "eject":  "react-scripts eject"
+                },
+    "eslintConfig":  {
+                         "extends":  [
+                                         "react-app"
+                                     ]
+                     },
+    "browserslist":  {
+                         "production":  [
+                                            "\u003e0.2%",
+                                            "not dead",
+                                            "not op_mini all"
+                                        ],
+                         "development":  [
+                                             "last 1 chrome version",
+                                             "last 1 firefox version",
+                                             "last 1 safari version"
+                                         ]
+                     },
+    "proxy":  "http://backend:8000"
+}

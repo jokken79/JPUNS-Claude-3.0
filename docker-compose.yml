@@ -1,0 +1,154 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: uns-claudejp-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-uns_claudejp}
+      POSTGRES_USER: ${POSTGRES_USER:-uns_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-57UD10R}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - uns-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-uns_admin} -d ${POSTGRES_DB:-uns_claudejp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Data Importer
+  importer:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: uns-claudejp-importer
+    restart: 'no'
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-uns_admin}:${POSTGRES_PASSWORD:-57UD10R}@db:5432/${POSTGRES_DB:-uns_claudejp}
+      POSTGRES_DB: ${POSTGRES_DB:-uns_claudejp}
+      POSTGRES_USER: ${POSTGRES_USER:-uns_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-57UD10R}
+    volumes:
+      - ./backend:/app
+      - ./config:/app/config
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - uns-network
+    command: python scripts/import_data.py
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: uns-claudejp-backend
+    restart: always
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-uns_admin}:${POSTGRES_PASSWORD:-57UD10R}@db:5432/${POSTGRES_DB:-uns_claudejp}
+      POSTGRES_DB: ${POSTGRES_DB:-uns_claudejp}
+      POSTGRES_USER: ${POSTGRES_USER:-uns_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-57UD10R}
+
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-57UD10R}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+
+      # Application
+      APP_NAME: ${APP_NAME:-UNS-ClaudeJP}
+      APP_VERSION: ${APP_VERSION:-2.0}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-true}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+
+      # File Upload
+      UPLOAD_DIR: /app/uploads
+      MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE:-10485760}
+
+      # OCR Services
+      OCR_ENABLED: ${OCR_ENABLED:-true}
+      TESSERACT_LANG: ${TESSERACT_LANG:-jpn+eng}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GOOGLE_CLOUD_VISION_ENABLED: ${GOOGLE_CLOUD_VISION_ENABLED:-false}
+      GOOGLE_CLOUD_VISION_API_KEY: ${GOOGLE_CLOUD_VISION_API_KEY}
+      AZURE_COMPUTER_VISION_ENDPOINT: ${AZURE_COMPUTER_VISION_ENDPOINT}
+      AZURE_COMPUTER_VISION_KEY: ${AZURE_COMPUTER_VISION_KEY}
+      AZURE_COMPUTER_VISION_API_VERSION: ${AZURE_COMPUTER_VISION_API_VERSION:-2023-02-01-preview}
+
+      # Notifications
+      LINE_NOTIFY_TOKEN: ${LINE_CHANNEL_ACCESS_TOKEN:-}
+      SMTP_SERVER: ${SMTP_SERVER:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@uns-kikaku.com}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FILE: ${LOG_FILE:-/app/logs/uns-claudejp.log}
+
+      # Company Info
+      COMPANY_NAME: ${COMPANY_NAME:-UNS-Kikaku}
+      COMPANY_WEBSITE: ${COMPANY_WEBSITE:-https://www.uns-kikaku.com}
+    volumes:
+      - ./backend:/app
+      - ./uploads:/app/uploads
+      - ./config:/app/config
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      importer:
+        condition: service_completed_successfully
+    networks:
+      - uns-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend (React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: uns-claudejp-frontend
+    restart: always
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+      REACT_APP_NAME: UNS-ClaudeJP 2.0
+      REACT_APP_COMPANY: UNS企画
+      REACT_APP_LANGUAGE: ja
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - uns-network
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  uns-network:
+    driver: bridge

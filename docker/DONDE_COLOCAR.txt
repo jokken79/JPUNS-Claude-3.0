@@ -1,0 +1,30 @@
+====================================================
+ARCHIVOS DOCKER - DONDE COLOCARLOS
+====================================================
+
+Archivo: docker-compose.yml (5 KB)
+-----------------------------------
+¿Qué hace?
+- Configura orden correcto de inicio
+- BD → Verificador → Backend → Frontend
+- Healthchecks en cada servicio
+- Backend NO inicia hasta que BD esté OK
+
+¿Dónde colocarlo?
+TU_PROYECTO/docker-compose.yml
+
+Ejemplo:
+D:\JPUNS-Claude.2.5.o\docker-compose.yml
+
+⚠️ IMPORTANTE:
+Este archivo REEMPLAZA el docker-compose.yml que ya tienes.
+Haz backup del actual primero:
+
+copy docker-compose.yml docker-compose.yml.backup
+copy RUTA\docker-compose.yml docker-compose.yml
+
+
+====================================================
+DESPUÉS DE COPIAR:
+Ejecutar: reset-database.bat
+====================================================

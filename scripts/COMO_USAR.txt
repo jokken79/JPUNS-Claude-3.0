@@ -1,0 +1,60 @@
+====================================================
+SCRIPTS - COMO USARLOS
+====================================================
+
+Script 1: consolidar-proyecto.ps1 (16 KB)
+------------------------------------------
+¿Qué hace?
+- Combina JPUNS-Claude.2.25 + JPUNS-Claude.2.5.o
+- Crea proyecto nuevo: JPUNS-Claude-3.0
+- Lo mejor de ambas versiones
+
+¿Cuándo usarlo?
+- Si quieres crear proyecto NUEVO 3.0
+- Si tienes ambas versiones (2.25 y 2.5.o)
+
+¿Cómo ejecutar?
+cd D:\
+powershell -ExecutionPolicy Bypass -File consolidar-proyecto.ps1
+
+Tiempo: 15-20 minutos
+
+
+Script 2: reset-database.bat (4 KB)
+------------------------------------
+¿Qué hace?
+- Detiene todos los contenedores
+- Elimina base de datos completamente
+- Reconstruye desde cero
+- Inserta datos de prueba
+- Verifica que todo funcione
+
+¿Cuándo usarlo?
+- SIEMPRE que veas error "candidates5"
+- Primera vez que instalas
+- Después de copiar archivos de base-datos/
+- Cuando algo no funcione con BD
+
+¿Dónde colocarlo?
+TU_PROYECTO/reset-database.bat
+
+Ejemplo:
+D:\JPUNS-Claude.2.5.o\reset-database.bat
+
+¿Cómo ejecutar?
+cd D:\JPUNS-Claude.2.5.o
+reset-database.bat
+
+Tiempo: 5 minutos
+
+
+====================================================
+ORDEN RECOMENDADO:
+
+1. Copiar archivos de base-datos/ al proyecto
+2. Copiar archivo de docker/ al proyecto  
+3. Copiar reset-database.bat al proyecto
+4. Ejecutar: reset-database.bat
+5. Esperar 5 minutos
+6. Abrir: http://localhost:3000
+====================================================
