@@ -40,20 +40,36 @@ def _build_emergency_contact(candidate: "Candidate") -> Optional[str]:
     return contact or None
 
 
+import threading
+
+# Lock for thread-safe Rirekisho ID generation
+id_generation_lock = threading.Lock()
+
 def generate_rirekisho_id(db: Session) -> str:
-    """Generate next Rirekisho ID"""
-    # Get last candidate
-    last_candidate = db.query(Candidate).order_by(Candidate.id.desc()).first()
+    """Generate next Rirekisho ID in a thread-safe manner."""
+    with id_generation_lock:
+        # Get last candidate
+        last_candidate = db.query(Candidate).order_by(Candidate.id.desc()).first()
 
-    if last_candidate and hasattr(last_candidate, 'rirekisho_id') and last_candidate.rirekisho_id:
-        # Extract number from UNS-XXXX
-        last_num = int(last_candidate.rirekisho_id.split('-')[1])
-        next_num = last_num + 1
-    else:
-        next_num = getattr(settings, 'RIREKISHO_ID_START', 1)
+        prefix = getattr(settings, 'RIREKISHO_ID_PREFIX', 'UNS-')
+        start_num = getattr(settings, 'RIREKISHO_ID_START', 1)
 
-    prefix = getattr(settings, 'RIREKISHO_ID_PREFIX', 'UNS-')
-    return f"{prefix}{next_num}"
+        if not isinstance(prefix, str) or not prefix:
+            raise ValueError("RIREKISHO_ID_PREFIX must be a non-empty string.")
+        if not isinstance(start_num, int) or start_num < 1:
+            raise ValueError("RIREKISHO_ID_START must be a positive integer.")
+
+        if last_candidate and hasattr(last_candidate, 'rirekisho_id') and last_candidate.rirekisho_id:
+            try:
+                last_num = int(last_candidate.rirekisho_id.split('-')[1])
+                next_num = last_num + 1
+            except (IndexError, ValueError):
+                # Fallback if parsing fails
+                next_num = db.query(Candidate).count() + start_num
+        else:
+            next_num = start_num
+
+        return f"{prefix}{next_num}"
 
 
 @router.post("/", response_model=CandidateResponse, status_code=status.HTTP_201_CREATED)
@@ -65,6 +81,13 @@ async def create_candidate(
     """
     Create new candidate from rirekisho (履歴書)
     """
+    # Basic validation
+    if not candidate.full_name_kanji and not candidate.full_name_roman:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Candidate name (Kanji or Roman) is required.",
+        )
+        
     # Generate Rirekisho ID
     rirekisho_id = generate_rirekisho_id(db)
 
