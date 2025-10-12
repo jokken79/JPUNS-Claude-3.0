@@ -91,16 +91,16 @@ const Layout: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 ml-auto">
             <div className="hidden text-right sm:flex sm:flex-col">
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">ログイン中</span>
               <span className="text-sm font-semibold text-slate-700">管理者</span>
             </div>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-rose-500/20 transition hover:shadow-rose-500/40 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 focus:ring-offset-white"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-rose-500/20 transition hover:shadow-rose-500/40 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-1 focus:ring-offset-white"
             >
-              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+              <ArrowRightOnRectangleIcon className="h-4 w-4" />
               ログアウト
             </button>
           </div>
@@ -110,10 +110,10 @@ const Layout: React.FC = () => {
       {/* Sidebar & Main */}
       <div className="relative z-10 flex pt-24">
         <div
-          className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-500 ease-in-out`}
+          className={`${sidebarOpen ? 'w-56' : 'w-0'} transition-all duration-500 ease-in-out`}
         >
           <aside
-            className={`pointer-events-auto fixed top-24 bottom-4 left-4 right-auto z-30 flex h-[calc(100vh-7rem)] w-64 flex-col overflow-hidden rounded-3xl border border-white/60 bg-white/80 p-3 shadow-2xl shadow-slate-900/10 backdrop-blur transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`pointer-events-auto fixed top-24 bottom-4 left-4 right-auto z-30 flex h-[calc(100vh-7rem)] w-56 flex-col overflow-hidden rounded-3xl border border-white/60 bg-white/80 p-3 shadow-2xl shadow-slate-900/10 backdrop-blur transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-[120%] opacity-0'
             } sm:left-4 lg:left-6`}
           >
@@ -198,10 +198,10 @@ const Layout: React.FC = () => {
 
         <main
           className={`flex-1 px-4 pb-8 transition-all duration-500 sm:px-6 lg:px-8 ${
-            sidebarOpen ? 'md:ml-72' : 'md:ml-0'
+            sidebarOpen ? 'md:ml-50' : 'md:ml-0'
           }`}
         >
-          <div className="mx-auto w-full max-w-7xl space-y-4">
+          <div className="mx-auto w-full max-w-5xl space-y-4 pl-2">
             <Outlet />
           </div>
         </main>

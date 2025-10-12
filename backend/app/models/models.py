@@ -358,7 +358,7 @@ class Employee(Base):
     # Employment information
     hire_date = Column(Date)  # 入社日
     current_hire_date = Column(Date)  # 現入社 - Fecha de entrada a fábrica actual
-    jikyu = Column(Integer, nullable=False)  # 時給
+    jikyu = Column(Integer)  # 時給
     jikyu_revision_date = Column(Date)  # 時給改定 - Fecha de revisión de salario
     position = Column(String(100))
     contract_type = Column(String(50))
@@ -451,7 +451,7 @@ class ContractWorker(Base):
     # Employment information
     hire_date = Column(Date)  # 入社日
     current_hire_date = Column(Date)  # 現入社 - Fecha de entrada a fábrica actual
-    jikyu = Column(Integer, nullable=False)  # 時給
+    jikyu = Column(Integer)  # 時給
     jikyu_revision_date = Column(Date)  # 時給改定 - Fecha de revisión de salario
     position = Column(String(100))
     contract_type = Column(String(50))

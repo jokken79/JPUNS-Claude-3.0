@@ -1,277 +1,400 @@
-# 🎯 JPUNS-CLAUDE3.0
+# UNS-ClaudeJP 3.0 - Sistema de Gestión de Personal
 
-Sistema integral de gestión de recursos humanos con OCR avanzado para el mercado japonés.
+Sistema completo de gestión de recursos humanos para empresas japonesas, desarrollado con FastAPI (Python) y React (TypeScript).
 
-![Version](https://img.shields.io/badge/version-3.0-blue.svg)
-![Status](https://img.shields.io/badge/status-production-green.svg)
-![Python](https://img.shields.io/badge/python-3.11-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)
-![React](https://img.shields.io/badge/React-18-blue.svg)
-
----
-
-## 📚 Documentación
-
-### 📖 **[DOCUMENTACION_COMPLETA.md](./DOCUMENTACION_COMPLETA.md)** ↁEComienza aquí
-
-Este documento contiene **TODA** la información del sistema:
-- Descripción general y arquitectura
-- Sistema OCR con Azure Computer Vision
-- Instalación y configuración completa
-- API y endpoints detallados
-- Frontend y templates
-- Base de datos y migraciones
-- Deployment y producción
-- Troubleshooting completo
-- Roadmap y mejoras futuras
+![Version](https://img.shields.io/badge/version-3.0-blue)
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![React](https://img.shields.io/badge/react-18-blue)
+![Docker](https://img.shields.io/badge/docker-ready-green)
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Inicio Rápido
 
-### 1. Requisitos Previos
-- Docker & Docker Compose
-- Node.js 18+ (opcional, para desarrollo)
-- Python 3.11+ (opcional, para desarrollo)
+### Primera Vez en Windows
 
-### 2. Instalación Rápida
+Si es tu **PRIMERA VEZ**, necesitas instalar Docker Desktop:
 
 ```bash
-# Clonar repositorio
-git clone <repo-url>
-cd JPUNS-CLAUDE3.0
-
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus credenciales de Azure
-
-# Levantar servicios
-docker-compose up -d --build
-
-# Verificar
-curl http://localhost:8000/api/health
-curl http://localhost:3000
+INSTALAR.bat
 ```
 
-### 3. Acceder al Sistema
+Este script:
+- ✅ Verifica si Docker está instalado
+- ✅ Te guía para instalarlo si no lo tienes
+- ✅ Construye todas las imágenes (tarda 5-10 minutos)
+- ✅ Inicia el sistema automáticamente
+- ✅ Te abre el navegador cuando está listo
 
-- **Frontend:** http://localhost:3000
-- **Formulario OCR:** http://localhost:3000/templates/rirekisho.html
-- **API Docs:** http://localhost:8000/api/docs
-- **Backend API:** http://localhost:8000/api
+### Si Ya Tienes Docker Desktop
 
----
-
-## ✨ Características Principales
-
-### 🤁EOCR Avanzado
-- Procesamiento automático de **Zairyu Card** (在留カーチE
-- Procesamiento automático de **Menkyosho** (免許証)
-- Extracción inteligente de datos con Azure Computer Vision
-- Llenado automático de formularios
-
-### 👥 Gestión de Personal
-- Registro de candidatos
-- Gestión de empleados
-- Control de fábricas
-- Sistema de tarjetas de tiempo
-
-### 📊 Administración
-- Cálculo de nóminas (normativa japonesa)
-- Generación de reportes
-- Dashboard con métricas
-- Notificaciones (Email, LINE, WhatsApp)
-
----
-
-## 🏗�E�EStack Tecnológico
-
-**Backend:**
-- FastAPI (Python 3.11)
-- PostgreSQL 15
-- Azure Computer Vision
-- Docker & Docker Compose
-
-**Frontend:**
-- React 18 + TypeScript
-- Tailwind CSS
-- HTML5 templates
-
----
-
-## 📋 Estructura del Proyecto
-
-```
-JPUNS-CLAUDE3.0/
-├── 📄 DOCUMENTACION_COMPLETA.md  ↁELEER PRIMERO
-├── backend/                      # API FastAPI
-━E  ├── app/
-━E  ━E  ├── api/                 # Endpoints REST
-━E  ━E  ├── services/            # Lógica de negocio
-━E  ━E  ├── models/              # Modelos DB
-━E  ━E  └── core/                # Configuración
-━E  └── requirements.txt
-├── frontend/                     # React App
-━E  ├── src/
-━E  └── public/templates/        # HTML templates
-├── database/                     # PostgreSQL
-━E  └── migrations/              # SQL migrations
-├── docs/                        # Documentación adicional
-├── docker-compose.yml
-└── .env                         # Variables de entorno
-```
-
----
-
-## 🔧 Configuración Esencial
-
-### Variables de Entorno (.env)
-
+Simplemente ejecuta:
 ```bash
-# Database
-DATABASE_URL=postgresql://uns_admin:password@db:5432/uns_claudejp
-
-# Azure Computer Vision (REQUERIDO para OCR)
-AZURE_COMPUTER_VISION_ENDPOINT=https://YOUR_RESOURCE.cognitiveservices.azure.com/
-AZURE_COMPUTER_VISION_KEY=YOUR_AZURE_KEY
-AZURE_COMPUTER_VISION_API_VERSION=2023-02-01-preview
-
-# Seguridad
-SECRET_KEY=your-secret-key-here
+START.bat
 ```
 
-**⚠�E�EImportante:** Obtén tus credenciales de Azure desde [Azure Portal](https://portal.azure.com)
+¡Listo! El sistema estará disponible en http://localhost:3000
+
+### Requisitos
+- **Windows 10/11**
+- **8GB RAM** mínimo (16GB recomendado)
+- **10GB espacio en disco** libre
+- **Docker Desktop** (el script INSTALAR.bat te ayuda con esto)
+
+### Credenciales de Acceso
+```
+Usuario:  admin
+Password: admin123
+```
 
 ---
 
-## 🧪 Pruebas
+## 📁 Estructura del Proyecto
 
-### Health Checks
-
-```bash
-# Backend general
-curl http://localhost:8000/api/health
-
-# OCR específico
-curl http://localhost:8000/api/azure-ocr/health
+```
+JPUNS-Claude-3.0/
+│
+├── 🎯 Scripts de Control (.bat)
+│   ├── INSTALAR.bat        # Primera vez: Instalar Docker + Sistema
+│   ├── START.bat           # Iniciar el sistema
+│   ├── STOP.bat            # Detener el sistema
+│   ├── LOGS.bat            # Ver logs de servicios
+│   ├── BACKUP-BD.bat       # Crear backup de base de datos
+│   ├── IMPORTAR-BD-ORIGINAL.bat  # Importar tu base de datos real
+│   ├── REINSTALAR.bat      # Reinstalar desde cero
+│   └── fix-login-correcto.bat  # Solución de problemas de login
+│
+├── 📚 Documentación
+│   ├── README.md           # Este archivo
+│   ├── GUIA_RAPIDA.md      # Comandos esenciales
+│   ├── GUIA-BASE-DATOS.md  # Guía completa de base de datos
+│   ├── CHANGELOG.md        # Historial de cambios
+│   ├── SOLUCION_LOGIN_DEFINITIVA.md    # Guía de solución login
+│   └── SOLUCION_ERROR_EMPLEADOS.md     # Guía de solución empleados
+│
+├── 🐳 Configuración Docker
+│   ├── docker-compose.yml  # Configuración de servicios
+│   └── docker/             # Dockerfiles
+│       ├── Dockerfile.backend
+│       └── Dockerfile.frontend
+│
+├── 🔧 Backend (FastAPI)
+│   └── backend/
+│       ├── app/
+│       │   ├── api/        # Endpoints REST
+│       │   ├── core/       # Configuración y utilidades
+│       │   ├── models/     # Modelos SQLAlchemy
+│       │   ├── schemas/    # Schemas Pydantic
+│       │   └── services/   # Lógica de negocio
+│       └── requirements.txt
+│
+├── 🎨 Frontend (React + TypeScript)
+│   └── frontend/
+│       ├── src/
+│       │   ├── components/ # Componentes React
+│       │   ├── pages/      # Páginas principales
+│       │   ├── services/   # Servicios API
+│       │   └── utils/      # Utilidades
+│       └── package.json
+│
+├── 💾 Base de Datos
+│   └── base-datos/
+│       ├── 01_init_database.sql      # Inicialización
+│       └── 02_add_missing_columns.sql # Migraciones
+│
+└── 🗑️ LIXO/                # Archivos obsoletos (ignorar)
 ```
 
-### Probar OCR
+---
 
+## 🎮 Uso del Sistema
+
+### Iniciar el Sistema
 ```bash
-# Procesar documento
-curl -X POST http://localhost:8000/api/azure-ocr/process \
-  -F "file=@documento.jpg" \
-  -F "document_type=zairyu_card"
+START.bat
 ```
+- Inicia todos los servicios (BD, Backend, Frontend)
+- Verifica que estén funcionando correctamente
+- Opción para abrir automáticamente en el navegador
+
+### Detener el Sistema
+```bash
+STOP.bat
+```
+- Detiene todos los contenedores Docker
+- Mantiene los datos en los volúmenes
+
+### Ver Logs
+```bash
+LOGS.bat
+```
+Opciones disponibles:
+1. Ver logs de todos los servicios
+2. Ver logs solo del Backend
+3. Ver logs solo del Frontend
+4. Ver logs de la Base de Datos
+5. Seguir logs en tiempo real
+
+### Reinstalar el Sistema
+```bash
+REINSTALAR.bat
+```
+⚠️ **ADVERTENCIA:** Esto eliminará todos los datos y reinstalará desde cero.
+
+Use esto solo si:
+- El sistema está completamente roto
+- Necesita datos frescos de prueba
+- Quiere empezar desde cero
+
+---
+
+## 🌐 URLs del Sistema
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| **Frontend** | http://localhost:3000 | Interfaz de usuario principal |
+| **Backend API** | http://localhost:8000 | API REST |
+| **API Docs** | http://localhost:8000/api/docs | Documentación Swagger |
+| **Base de Datos** | localhost:5432 | PostgreSQL (acceso interno) |
+
+---
+
+## 🔧 Funcionalidades Principales
+
+### 👥 Gestión de Candidatos
+- Registro de candidatos con履歴書 (Rirekisho)
+- Procesamiento OCR de documentos
+- Estado de aprobación/rechazo
+- Conversión a empleado
+
+### 👷 Gestión de Empleados
+- Registro completo de empleados
+- Gestión de contratos y visas
+- Asignación a fábricas
+- Gestión de apartamentos
+- Seguimiento de salarios
+
+### 🏭 Gestión de Fábricas
+- Registro de empresas cliente
+- Asignación de personal
+- Gestión de contratos
+
+### 📅 Control de Asistencia
+- Registro de entrada/salida (タイムカード)
+- Cálculo de horas trabajadas
+- Horas extras y festivos
+
+### 💰 Gestión de Nómina
+- Cálculo automático de salarios
+- Deducciones y bonificaciones
+- Historial de pagos
+
+### 📄 Solicitudes (申請)
+- Vacaciones (有給)
+- Permisos
+- Regreso temporal (一時帰国)
+- Renuncias
+
+### 🔐 Sistema de Usuarios
+- Roles jerárquicos (SUPER_ADMIN, ADMIN, COORDINATOR, etc.)
+- Autenticación JWT
+- Permisos por rol
+
+---
+
+## 🛠️ Tecnologías
+
+### Backend
+- **FastAPI** - Framework web moderno y rápido
+- **SQLAlchemy** - ORM para Python
+- **PostgreSQL** - Base de datos relacional
+- **Pydantic** - Validación de datos
+- **JWT** - Autenticación segura
+- **Tesseract OCR** - Procesamiento de documentos
+- **Azure Computer Vision** - OCR avanzado
 
 ### Frontend
+- **React 18** - Biblioteca de UI
+- **TypeScript** - JavaScript tipado
+- **Tailwind CSS** - Framework CSS
+- **React Router** - Navegación
+- **Axios** - Cliente HTTP
 
-1. Abrir: http://localhost:3000/templates/rirekisho.html
-2. Verificar que muestre: "OCRエンド�EインチE ✁EDisponible"
-3. Subir una imagen de zairyu card o menkyosho
-4. Ver campos rellenarse automáticamente
+### DevOps
+- **Docker** - Contenerización
+- **Docker Compose** - Orquestación
+- **Nginx** - Servidor web (producción)
 
 ---
 
-## 🔍 Troubleshooting
+## 🐛 Solución de Problemas
 
-### OCR no funciona
+### El login no funciona
+Ejecuta:
+```bash
+fix-login-correcto.bat
+```
+Este script corrige automáticamente el password del usuario admin.
+
+Consulta: [SOLUCION_LOGIN_DEFINITIVA.md](SOLUCION_LOGIN_DEFINITIVA.md)
+
+### Error al cargar empleados
+El sistema ya está corregido, pero si aparece el error consulta:
+[SOLUCION_ERROR_EMPLEADOS.md](SOLUCION_ERROR_EMPLEADOS.md)
+
+### Los contenedores no inician
+1. Verifica que Docker Desktop esté corriendo
+2. Verifica que los puertos estén libres:
+```bash
+netstat -ano | findstr "3000"
+netstat -ano | findstr "8000"
+netstat -ano | findstr "5432"
+```
+3. Reinicia Docker Desktop
+4. Ejecuta `REINSTALAR.bat` si el problema persiste
+
+### El frontend no carga
+- El frontend puede tardar 1-2 minutos en compilar la primera vez
+- Verifica los logs: `LOGS.bat` → opción 3
+- Espera un poco más y recarga la página
+
+### Backend devuelve errores 500
+1. Verifica los logs: `LOGS.bat` → opción 2
+2. Verifica que la base de datos esté funcionando: `LOGS.bat` → opción 4
+3. Si el error persiste, ejecuta `REINSTALAR.bat`
+
+---
+
+## 📊 Base de Datos: Demo vs Real
+
+### Datos de Prueba (Por Defecto)
+
+El sistema viene con **datos de demostración** preinstalados:
+
+- **1 usuario admin** (admin / admin123)
+- **5 fábricas** (PMI, Nippi, Yamaha, Toyota, Honda)
+- **5 apartamentos**
+- **5 candidatos** (en diferentes estados)
+- **5 empleados** activos
+- **Registros de asistencia** y solicitudes de ejemplo
+
+### Usar tu Base de Datos Real
+
+Para cambiar a tus datos reales:
 
 ```bash
-# 1. Verificar backend
-docker ps | grep backend
+# Opción 1: Importar desde archivo .sql
+IMPORTAR-BD-ORIGINAL.bat
 
-# 2. Ver logs
-docker logs uns-claudejp-backend --tail 50
-
-# 3. Verificar credenciales
-grep AZURE .env
-
-# 4. Reiniciar
-docker-compose restart backend
+# Opción 2: Hacer backup de BD actual
+BACKUP-BD.bat
 ```
 
-**👉 Más soluciones:** Ver sección "Troubleshooting" en [DOCUMENTACION_COMPLETA.md](./DOCUMENTACION_COMPLETA.md)
+**Guía completa:** [GUIA-BASE-DATOS.md](GUIA-BASE-DATOS.md)
+
+#### 4 Formas de Usar tus Datos:
+1. **Archivo .sql** - Backup de PostgreSQL
+2. **CSV/Excel** - Importar por interfaz web
+3. **Otra PostgreSQL** - Migrar desde otra BD
+4. **BD Externa** - Conectar a BD existente
 
 ---
 
-## 📊 Estado del Sistema
+## 🔐 Seguridad
 
-| Componente | Estado | Puerto |
-|------------|--------|--------|
-| Backend FastAPI | ✁EFuncionando | 8000 |
-| Frontend React | ✁EFuncionando | 3000 |
-| PostgreSQL | ✁EFuncionando | 5432 |
-| Azure OCR | ✁EFuncionando | - |
+### Credenciales por Defecto
+⚠️ **IMPORTANTE:** Cambia las credenciales por defecto antes de usar en producción:
 
----
+1. **Usuario admin:**
+   - Cambiar password desde la interfaz de usuario
+   - O modificar en la base de datos
 
-## 🚢 Deployment
+2. **Base de datos:**
+   - Modificar `POSTGRES_PASSWORD` en `docker-compose.yml`
+   - Modificar `SECRET_KEY` para JWT
 
-### Desarrollo
-```bash
-docker-compose up -d
-```
-
-### Producción
-```bash
-# Configurar .env para producción
-ENVIRONMENT=production
-DEBUG=false
-
-# Build y deploy
-docker-compose -f docker-compose.prod.yml up -d --build
-```
-
-**👉 Guía completa:** Ver sección "Deployment" en [DOCUMENTACION_COMPLETA.md](./DOCUMENTACION_COMPLETA.md)
+3. **API Keys:**
+   - Configurar variables de entorno para servicios externos
+   - No subir archivos `.env` al repositorio
 
 ---
 
-## 📖 Documentación Adicional
+## 📝 Variables de Entorno
 
-- [DOCUMENTACION_COMPLETA.md](./DOCUMENTACION_COMPLETA.md) - Guía completa del sistema
-- [docs/API_EXAMPLES.md](./docs/API_EXAMPLES.md) - Ejemplos de API
-- [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Guía de deployment
-- [docs/technical/](./docs/technical/) - Documentación técnica
-- [docs/sessions/](./docs/sessions/) - Bitácoras de desarrollo
+Crea un archivo `.env` en la raíz del proyecto para configuración personalizada:
+
+```env
+# Database
+POSTGRES_DB=uns_claudejp
+POSTGRES_USER=uns_admin
+POSTGRES_PASSWORD=TU_PASSWORD_SEGURO
+
+# JWT
+SECRET_KEY=TU_SECRET_KEY_SEGURO
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# OCR Services (opcional)
+GEMINI_API_KEY=tu_api_key
+AZURE_COMPUTER_VISION_ENDPOINT=tu_endpoint
+AZURE_COMPUTER_VISION_KEY=tu_key
+
+# Email (opcional)
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu_email@gmail.com
+SMTP_PASSWORD=tu_password
+```
+
+---
+
+## 🤝 Contribución
+
+Este es un proyecto privado, pero si necesitas hacer cambios:
+
+1. Crea una rama nueva: `git checkout -b feature/nueva-funcionalidad`
+2. Haz tus cambios y commits: `git commit -am 'Agregar nueva funcionalidad'`
+3. Push a la rama: `git push origin feature/nueva-funcionalidad`
+4. Crea un Pull Request
+
+---
+
+## 📜 Licencia
+
+Propiedad de UNS-Kikaku. Todos los derechos reservados.
 
 ---
 
 ## 📞 Soporte
 
-- **Documentación:** [DOCUMENTACION_COMPLETA.md](./DOCUMENTACION_COMPLETA.md)
-- **API Docs:** http://localhost:8000/api/docs
-- **Email:** support@uns-kikaku.com
-- **Website:** https://www.uns-kikaku.com
+Para problemas o preguntas:
+1. Revisa la documentación en `/docs`
+2. Consulta los archivos `SOLUCION_*.md`
+3. Revisa los logs con `LOGS.bat`
+4. Contacta al equipo de desarrollo
 
 ---
 
-## 🤁EContribuir
+## 🎉 Changelog
 
-1. Fork el proyecto
-2. Crear feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
+Ver [CHANGELOG.md](CHANGELOG.md) para historial detallado de cambios.
 
----
-
-## 📄 Licencia
-
-Proprietary - UNS-Kikaku © 2025
+**Última actualización:** 2025-10-12
+**Versión:** 3.0
 
 ---
 
-## 🙏 Agradecimientos
+## 🗂️ Carpeta LIXO
 
-- Azure Computer Vision
-- FastAPI Framework
-- React Team
-- Claude AI
+La carpeta `LIXO/` contiene scripts y documentación obsoleta que ya no se usan pero se conservan por referencia. **Puedes ignorar completamente esta carpeta.**
+
+Contenido:
+- `scripts-viejos/` - Scripts .bat antiguos
+- `docs-viejas/` - Documentación obsoleta
+- `archivos-temporales/` - Scripts temporales de prueba
+
+Si quieres liberar espacio, puedes eliminar toda la carpeta LIXO sin afectar el sistema.
 
 ---
 
-**Desarrollado con ❤�E�Epor UNS-Kikaku**
-
-**Última actualización:** 2025-10-12 | **Versión:** 3.0
+**¡Gracias por usar UNS-ClaudeJP 3.0!** 🚀
