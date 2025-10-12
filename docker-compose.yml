@@ -42,7 +42,13 @@ services:
         condition: service_healthy
     networks:
       - uns-network
-    command: python scripts/import_data.py
+    command: >
+      sh -c "
+        echo '--- Running create_admin_user.py ---' &&
+        python scripts/create_admin_user.py &&
+        echo '--- Running import_data.py ---' &&
+        python scripts/import_data.py
+      "
 
   # Backend API (FastAPI)
   backend:

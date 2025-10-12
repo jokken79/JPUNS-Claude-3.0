@@ -157,10 +157,10 @@ CREATE TABLE employees (
     hakenmoto_id INTEGER UNIQUE NOT NULL,
     rirekisho_id VARCHAR(20) REFERENCES candidates(rirekisho_id),
     factory_id VARCHAR(20) REFERENCES factories(factory_id),
-    apartment_code VARCHAR(50) REFERENCES apartments(apartment_code),
     hakensaki_shain_id VARCHAR(50),
     full_name_kanji VARCHAR(100) NOT NULL,
     full_name_kana VARCHAR(100),
+    photo_url VARCHAR(255),
     date_of_birth DATE,
     gender VARCHAR(10),
     nationality VARCHAR(50),
@@ -168,41 +168,154 @@ CREATE TABLE employees (
     zairyu_expire_date DATE,
     address TEXT,
     phone VARCHAR(20),
-    mobile VARCHAR(20),
     email VARCHAR(100),
-    photo_url VARCHAR(255),
+    emergency_contact_name VARCHAR(100),
+    emergency_contact_phone VARCHAR(20),
+    emergency_contact_relationship VARCHAR(50),
     hire_date DATE,
     current_hire_date DATE,
-    contract_start_date DATE,
-    contract_end_date DATE,
     jikyu INTEGER,
-    status VARCHAR(20) DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- Campos adicionales de migración 002
-    emergency_contact_name VARCHAR(255),
-    emergency_contact_phone VARCHAR(50),
-    emergency_contact_relationship VARCHAR(100),
-    bank_name VARCHAR(255),
-    bank_branch VARCHAR(255),
-    bank_account_number VARCHAR(100),
-    social_insurance_number VARCHAR(100),
-    pension_number VARCHAR(100),
-    -- Campos adicionales de migración 003
-    employee_number VARCHAR(50) UNIQUE,
-    furigana VARCHAR(255),
-    postal_code VARCHAR(20),
-    position VARCHAR(100),
-    department VARCHAR(100),
+    jikyu_revision_date DATE,
+    "position" VARCHAR(100),
     contract_type VARCHAR(50),
-    monthly_salary DECIMAL(10, 2),
-    visa_type VARCHAR(100),
-    driver_license_number VARCHAR(100),
-    bank_account_holder VARCHAR(255),
-    employment_insurance_number VARCHAR(100),
-    documents_url TEXT
+    assignment_location VARCHAR(200),
+    assignment_line VARCHAR(200),
+    job_description TEXT,
+    hourly_rate_charged INTEGER,
+    billing_revision_date DATE,
+    profit_difference INTEGER,
+    standard_compensation INTEGER,
+    health_insurance INTEGER,
+    nursing_insurance INTEGER,
+    pension_insurance INTEGER,
+    social_insurance_date DATE,
+    visa_type VARCHAR(50),
+    license_type VARCHAR(100),
+    license_expire_date DATE,
+    commute_method VARCHAR(50),
+    optional_insurance_expire DATE,
+    japanese_level VARCHAR(50),
+    career_up_5years BOOLEAN DEFAULT FALSE,
+    entry_request_date DATE,
+    notes TEXT,
+    postal_code VARCHAR(10),
+    apartment_id INTEGER REFERENCES apartments(id),
+    apartment_start_date DATE,
+    apartment_move_out_date DATE,
+    apartment_rent INTEGER,
+    yukyu_total INTEGER DEFAULT 0,
+    yukyu_used INTEGER DEFAULT 0,
+    yukyu_remaining INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    termination_date DATE,
+    termination_reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 SELECT log_message('✓ Tabla employees creada');
+
+-- Tabla: contract_workers
+SELECT log_message('Creando tabla: contract_workers');
+CREATE TABLE contract_workers (
+    id SERIAL PRIMARY KEY,
+    hakenmoto_id INTEGER UNIQUE NOT NULL,
+    rirekisho_id VARCHAR(20) REFERENCES candidates(rirekisho_id),
+    factory_id VARCHAR(20) REFERENCES factories(factory_id),
+    hakensaki_shain_id VARCHAR(50),
+    full_name_kanji VARCHAR(100) NOT NULL,
+    full_name_kana VARCHAR(100),
+    photo_url VARCHAR(255),
+    date_of_birth DATE,
+    gender VARCHAR(10),
+    nationality VARCHAR(50),
+    zairyu_card_number VARCHAR(50),
+    zairyu_expire_date DATE,
+    address TEXT,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    emergency_contact_name VARCHAR(100),
+    emergency_contact_phone VARCHAR(20),
+    emergency_contact_relationship VARCHAR(50),
+    hire_date DATE,
+    current_hire_date DATE,
+    jikyu INTEGER,
+    jikyu_revision_date DATE,
+    "position" VARCHAR(100),
+    contract_type VARCHAR(50),
+    assignment_location VARCHAR(200),
+    assignment_line VARCHAR(200),
+    job_description TEXT,
+    hourly_rate_charged INTEGER,
+    billing_revision_date DATE,
+    profit_difference INTEGER,
+    standard_compensation INTEGER,
+    health_insurance INTEGER,
+    nursing_insurance INTEGER,
+    pension_insurance INTEGER,
+    social_insurance_date DATE,
+    visa_type VARCHAR(50),
+    license_type VARCHAR(100),
+    license_expire_date DATE,
+    commute_method VARCHAR(50),
+    optional_insurance_expire DATE,
+    japanese_level VARCHAR(50),
+    career_up_5years BOOLEAN DEFAULT FALSE,
+    entry_request_date DATE,
+    notes TEXT,
+    postal_code VARCHAR(10),
+    apartment_id INTEGER REFERENCES apartments(id),
+    apartment_start_date DATE,
+    apartment_move_out_date DATE,
+    apartment_rent INTEGER,
+    yukyu_total INTEGER DEFAULT 0,
+    yukyu_used INTEGER DEFAULT 0,
+    yukyu_remaining INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    termination_date DATE,
+    termination_reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+SELECT log_message('✓ Tabla contract_workers creada');
+
+-- Tabla: staff
+SELECT log_message('Creando tabla: staff');
+CREATE TABLE staff (
+    id SERIAL PRIMARY KEY,
+    staff_id INTEGER UNIQUE NOT NULL,
+    rirekisho_id VARCHAR(20) REFERENCES candidates(rirekisho_id),
+    full_name_kanji VARCHAR(100),
+    full_name_kana VARCHAR(100),
+    photo_url VARCHAR(255),
+    date_of_birth DATE,
+    gender VARCHAR(10),
+    nationality VARCHAR(50),
+    address TEXT,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    emergency_contact_name VARCHAR(100),
+    emergency_contact_phone VARCHAR(20),
+    emergency_contact_relationship VARCHAR(50),
+    postal_code VARCHAR(10),
+    hire_date DATE,
+    "position" VARCHAR(100),
+    department VARCHAR(100),
+    monthly_salary INTEGER,
+    health_insurance INTEGER,
+    nursing_insurance INTEGER,
+    pension_insurance INTEGER,
+    social_insurance_date DATE,
+    yukyu_total INTEGER DEFAULT 0,
+    yukyu_used INTEGER DEFAULT 0,
+    yukyu_remaining INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    termination_date DATE,
+    termination_reason TEXT,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+SELECT log_message('✓ Tabla staff creada');
 
 -- Tabla: contract_workers
 SELECT log_message('Creando tabla: contract_workers');
@@ -331,15 +444,7 @@ SELECT log_message('========================================');
 SELECT log_message('Insertando datos de prueba...');
 SELECT log_message('========================================');
 
--- Usuario Admin
-SELECT log_message('Insertando usuario admin...');
--- NOTA: Este hash fue generado con bcrypt y corresponde al password: admin123
--- Generado con: from passlib.context import CryptContext; CryptContext(schemes=["bcrypt"]).hash("admin123")
-INSERT INTO users (username, email, password_hash, role, full_name) VALUES
-('admin', 'admin@uns-kikaku.com', '$2b$12$svu9jskq/HZgJoL6BmVBW.LS9uILn3Z.7fJmaE17mctNtpVb2jjhi', 'SUPER_ADMIN', 'Administrator');
--- Password: admin123
-
-SELECT log_message('✓ Usuario admin creado (username: admin, password: admin123)');
+-- El usuario administrador ahora se crea a través de un script separado para mayor fiabilidad.
 
 -- Fábricas
 SELECT log_message('Insertando fábricas...');

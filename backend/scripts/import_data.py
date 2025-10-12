@@ -162,10 +162,21 @@ def import_haken_employees(db: Session):
                     val = row.get(key)
                     return str(val) if pd.notna(val) else None
 
+                # Find factory_id by looking up the factory name from '派遣先'
+                factory_name_from_excel = get_str('派遣先')
+                db_factory_id = None
+                if factory_name_from_excel:
+                    # Use a LIKE query to find the factory, as names might not be exact
+                    factory_record = db.query(Factory).filter(Factory.name.like(f'%{factory_name_from_excel}%')).first()
+                    if factory_record:
+                        db_factory_id = factory_record.factory_id
+                    else:
+                        print(f"  [WARN] Factory '{factory_name_from_excel}' not found for employee {hakenmoto_id}. Skipping factory link.")
+
                 # Create employee record with ALL fields
                 employee = Employee(
                     hakenmoto_id=hakenmoto_id,
-                    factory_id=get_str('派遣先ID'),
+                    factory_id=db_factory_id,
                     hakensaki_shain_id=get_str('派遣先社員ID'),
                     full_name_kanji=get_str('氏名') or '',
                     full_name_kana=get_str('カナ') or '',

@@ -141,10 +141,24 @@ def import_haken_employees(db: Session):
                     except:
                         jikyu = 0
 
+                # Find factory_id from factory name
+                factory_id_to_assign = None
+                if pd.notna(row['派遣先']):
+                    # This assumes factory names in the excel match the ones in the DB
+                    factory_name_from_excel = str(row['派遣先']).strip()
+                    factory_record = db.query(Factory).filter(Factory.name.ilike(f'%{factory_name_from_excel}%')).first()
+                    if factory_record:
+                        factory_id_to_assign = factory_record.factory_id
+                    else:
+                        print(f"  [ADVERTENCIA] Fábrica '{factory_name_from_excel}' no encontrada para empleado {hakenmoto_id}. Se dejará el factory_id como nulo.")
+
                 # Create employee record
                 employee = Employee(
                     hakenmoto_id=hakenmoto_id,
-                    factory_id=str(row['派遣先ID']) if pd.notna(row['派遣先ID']) else None,
+                    # CORRECTED LOGIC
+                    factory_id=factory_id_to_assign,
+                    hakensaki_shain_id=str(row['派遣先ID']) if pd.notna(row['派遣先ID']) else None,
+                    
                     full_name_kanji=str(row['氏名']) if pd.notna(row['氏名']) else '',
                     full_name_kana=str(row['カナ']) if pd.notna(row['カナ']) else '',
                     date_of_birth=dob,
