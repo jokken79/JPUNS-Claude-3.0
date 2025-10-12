@@ -351,8 +351,9 @@ class Employee(Base):
     address = Column(Text)
     phone = Column(String(20))
     email = Column(String(100))
-    emergency_contact = Column(String(100))
-    emergency_phone = Column(String(20))
+    emergency_contact_name = Column(String(100))
+    emergency_contact_phone = Column(String(20))
+    emergency_contact_relationship = Column(String(50))
 
     # Employment information
     hire_date = Column(Date)  # 入社日
@@ -443,8 +444,9 @@ class ContractWorker(Base):
     address = Column(Text)
     phone = Column(String(20))
     email = Column(String(100))
-    emergency_contact = Column(String(100))
-    emergency_phone = Column(String(20))
+    emergency_contact_name = Column(String(100))
+    emergency_contact_phone = Column(String(20))
+    emergency_contact_relationship = Column(String(50))
 
     # Employment information
     hire_date = Column(Date)  # 入社日
@@ -525,8 +527,9 @@ class Staff(Base):
     address = Column(Text)
     phone = Column(String(20))
     email = Column(String(100))
-    emergency_contact = Column(String(100))
-    emergency_phone = Column(String(20))
+    emergency_contact_name = Column(String(100))
+    emergency_contact_phone = Column(String(20))
+    emergency_contact_relationship = Column(String(50))
     postal_code = Column(String(10))
 
     # Employment information
