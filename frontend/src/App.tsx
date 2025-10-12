@@ -17,6 +17,7 @@ import TimerCards from './pages/TimerCards';
 import Salary from './pages/Salary';
 import Requests from './pages/Requests';
 import ImportData from './pages/ImportData';
+import RirekishoPrintView from './pages/RirekishoPrintView';
 
 // Components
 import Layout from './components/Layout';
@@ -100,6 +101,14 @@ function App() {
                 <VisibilityGuard pageKey="candidates">
                   <CandidateForm />
                 </VisibilityGuard>
+              )}
+            />
+            <Route
+              path="candidates/:id/print"
+              element={(
+                <ProtectedRoute>
+                  <RirekishoPrintView />
+                </ProtectedRoute>
               )}
             />
             <Route

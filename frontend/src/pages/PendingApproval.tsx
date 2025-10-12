@@ -344,6 +344,13 @@ const PendingApproval: React.FC = () => {
                   >
                     詳細
                   </Link>
+                  <Link
+                    to={`/candidates/${candidate.id}/print`}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-xl font-semibold text-sm hover:bg-blue-200 transition-all duration-300"
+                    target="_blank" // Open in a new tab
+                  >
+                    印刷
+                  </Link>
                 </div>
               </div>
             );
