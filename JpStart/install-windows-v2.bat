@@ -6,6 +6,39 @@ echo UNS-ClaudeJP 2.0 - Windows Installation v2.0
 echo ==========================================
 echo.
 
+REM Check if this is the first installation
+set "FIRST_INSTALL=true"
+set "INSTALL_MARKER=.install_complete"
+
+REM Check for installation markers
+if exist "%INSTALL_MARKER%" (
+    set "FIRST_INSTALL=false"
+    echo [INFO] Instalación previa detectada.
+    echo.
+)
+
+if exist ".env" (
+    set "FIRST_INSTALL=false"
+    echo [INFO] Archivo .env ya existe.
+    echo.
+)
+
+REM Check if Docker containers are already running
+docker ps --format "table {{.Names}}" | findstr "uns-claudejp" >nul 2>&1
+if %errorlevel% EQU 0 (
+    set "FIRST_INSTALL=false"
+    echo [INFO] Contenedores UNS-ClaudeJP ya están corriendo.
+    echo.
+)
+
+if "%FIRST_INSTALL%"=="true" (
+    echo [PRIMERA INSTALACIÓN] Esta parece ser una instalación por primera vez.
+    echo.
+) else (
+    echo [REINSTALACIÓN] Esta parece ser una reinstalación o actualización.
+    echo.
+)
+
 :: Detectar Docker Compose
 echo Detecting Docker Compose...
 set "DOCKER_COMPOSE_CMD="
@@ -54,6 +87,10 @@ echo ==========================================
 echo OPCIONES DE INSTALACIÓN
 echo ==========================================
 echo.
+if "%FIRST_INSTALL%"=="true" (
+    echo [PRIMERA INSTALACIÓN] Se recomienda la opción 1 para primera vez
+    echo.
+)
 echo 1. Instalación Fresh (recomendado para primera vez)
 echo    - Elimina containers y volúmenes anteriores
 echo    - Descarga imágenes actualizadas
@@ -107,18 +144,26 @@ echo [OK] Directories created
 :: Verificar .env
 echo [4/6] Checking .env file...
 if not exist ".env" (
-    echo Creating .env file...
+    if "%FIRST_INSTALL%"=="true" (
+        echo [PRIMERA INSTALACIÓN] Creando archivo .env desde plantilla...
+    ) else (
+        echo Creating .env file...
+    )
     copy .env.example .env >nul
     echo.
-    echo [IMPORTANT] Please edit .env file:
-    echo   1. Change DB_PASSWORD
-    echo   2. Change SECRET_KEY
-    echo   3. Configure email (optional)
+    echo [IMPORTANTE] Por favor edita el archivo .env:
+    echo   1. Cambia DB_PASSWORD
+    echo   2. Cambia SECRET_KEY
+    echo   3. Configura email (opcional)
     echo.
-    echo Do you want to edit .env now? (Y/N)
+    echo ¿Quieres editar .env ahora? (S/N)
     set /p EDIT_ENV=
-    if /I "%EDIT_ENV%"=="Y" (
+    if /I "%EDIT_ENV%"=="S" (
         notepad .env
+    )
+) else (
+    if "%FIRST_INSTALL%"=="true" (
+        echo [PRIMERA INSTALACIÓN] Archivo .env ya existe, omitiendo creación.
     )
 )
 echo.
@@ -141,8 +186,14 @@ if errorlevel 1 (
 echo [OK] Build complete
 
 :: Esperar a que la base de datos esté completamente saludable
-echo [WAITING] Waiting for database to be fully healthy...
-timeout /t 20 /nobreak >nul
+if "%FIRST_INSTALL%"=="true" (
+    echo [PRIMERA INSTALACIÓN] Esperando que la base de datos esté completamente saludable...
+    echo Esto puede tomar 2-3 minutos en la primera instalación.
+    timeout /t 30 /nobreak >nul
+) else (
+    echo [WAITING] Waiting for database to be fully healthy...
+    timeout /t 20 /nobreak >nul
+)
 
 :: Verificar estado de salud de la base de datos
 echo [CHECKING] Verifying database health...
@@ -258,45 +309,65 @@ for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /c:"IPv4"') do (
 :found_ip
 set LOCAL_IP=%LOCAL_IP:~1%
 
+:: Crear marcador de instalación
+echo. > "%INSTALL_MARKER%"
+echo [INFO] Marcador de instalación creado.
+
 :: Mostrar resumen
 echo ==========================================
-echo Installation Complete!
+if "%FIRST_INSTALL%"=="true" (
+    echo ¡Primera Instalación Completada!
+) else (
+    echo ¡Instalación/Actualización Completada!
+)
 echo ==========================================
 echo.
-echo Access the application:
+
+if "%FIRST_INSTALL%"=="true" (
+    echo [NOTAS IMPORTANTES PRIMERA INSTALACIÓN]:
+    echo  - La base de datos se está inicializando en segundo plano
+    echo  - El primer inicio de sesión puede tardar 2-3 minutos
+    echo  - Se han creado las credenciales por defecto
+    echo.
+    echo Credenciales por defecto:
+    echo   - Usuario: admin
+    echo   - Contraseña: admin123
+    echo   [¡IMPORTANTE!] Cambia la contraseña después del primer login!
+    echo.
+) else (
+    echo ¡Aplicación actualizada exitosamente!
+    echo.
+)
+
+echo Acceder a la aplicación:
 echo   - Frontend: http://localhost:3000
 echo   - Backend API: http://localhost:8000
 echo   - API Docs: http://localhost:8000/api/docs
 echo.
-echo Network access:
+echo Acceso desde red:
 echo   - Frontend: http://%LOCAL_IP%:3000
 echo   - Backend: http://%LOCAL_IP%:8000
 echo.
-echo Default credentials:
-echo   - Username: admin
-echo   - Password: admin123
-echo   [IMPORTANT] Change password after first login!
+echo Comandos útiles:
+echo   - Inicio rápido: start-app.bat
+echo   - Detener rápido: stop-app.bat
+echo   - Ver estado: check-services.bat
+echo   - Ver logs: %DOCKER_COMPOSE_CMD% logs -f
+echo   - Detener: %DOCKER_COMPOSE_CMD% stop
+echo   - Iniciar: %DOCKER_COMPOSE_CMD% start
+echo   - Reiniciar: %DOCKER_COMPOSE_CMD% restart
+echo   - Eliminar: %DOCKER_COMPOSE_CMD% down
 echo.
-echo Useful commands:
-echo   - Quick start: start-app.bat
-echo   - Quick stop: stop-app.bat
-echo   - Check status: check-services.bat
-echo   - View logs: %DOCKER_COMPOSE_CMD% logs -f
-echo   - Stop: %DOCKER_COMPOSE_CMD% stop
-echo   - Start: %DOCKER_COMPOSE_CMD% start
-echo   - Restart: %DOCKER_COMPOSE_CMD% restart
-echo   - Remove: %DOCKER_COMPOSE_CMD% down
-echo.
-echo Troubleshooting:
-echo   - If backend doesn't respond, wait 2-3 minutes for database initialization
-echo   - Check logs with: %DOCKER_COMPOSE_CMD% logs
-echo   - For database issues, run: fix-database.bat
+echo Solución de problemas:
+echo   - Si el backend no responde, espera 2-3 minutos para inicialización de BD
+echo   - Revisa logs con: %DOCKER_COMPOSE_CMD% logs
+echo   - Para problemas de base de datos, ejecuta: fix-database.bat
 echo.
 
 :: Preguntar si abrir navegador
-echo Open application in browser? (Y/N)
+echo ¿Abrir aplicación en el navegador? (S/N)
 set /p OPEN_BROWSER=
-if /I "%OPEN_BROWSER%"=="Y" (
+if /I "%OPEN_BROWSER%"=="S" (
     start http://localhost:3000
     start http://localhost:8000/api/docs
 )

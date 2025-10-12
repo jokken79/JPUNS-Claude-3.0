@@ -172,9 +172,10 @@ CREATE TABLE employees (
     email VARCHAR(100),
     photo_url VARCHAR(255),
     hire_date DATE,
+    current_hire_date DATE,
     contract_start_date DATE,
     contract_end_date DATE,
-    hourly_wage INTEGER,
+    jikyu INTEGER,
     status VARCHAR(20) DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -202,6 +203,39 @@ CREATE TABLE employees (
     documents_url TEXT
 );
 SELECT log_message('✓ Tabla employees creada');
+
+-- Tabla: contract_workers
+SELECT log_message('Creando tabla: contract_workers');
+CREATE TABLE contract_workers (
+    id SERIAL PRIMARY KEY,
+    hakenmoto_id INTEGER UNIQUE NOT NULL,
+    full_name_kanji VARCHAR(100),
+    full_name_kana VARCHAR(100),
+    gender VARCHAR(10),
+    nationality VARCHAR(50),
+    hire_date DATE,
+    jikyu INTEGER,
+    contract_type VARCHAR(50) DEFAULT '請負',
+    is_active BOOLEAN DEFAULT TRUE,
+    termination_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+SELECT log_message('✓ Tabla contract_workers creada');
+
+-- Tabla: staff
+SELECT log_message('Creando tabla: staff');
+CREATE TABLE staff (
+    id SERIAL PRIMARY KEY,
+    staff_id INTEGER UNIQUE NOT NULL,
+    full_name_kanji VARCHAR(100),
+    full_name_kana VARCHAR(100),
+    monthly_salary INTEGER,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+SELECT log_message('✓ Tabla staff creada');
 
 -- Tabla: requests
 SELECT log_message('Creando tabla: requests');

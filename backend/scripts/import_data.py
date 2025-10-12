@@ -39,8 +39,17 @@ def import_factories(db: Session):
                     skipped += 1
                     continue
 
+                # Find the correct factory file by prefix
+                factory_dir = Path('/app/config/factories')
+                found_files = list(factory_dir.glob(f'{factory_id}*.json'))
+                
+                if not found_files:
+                    raise FileNotFoundError(f"No JSON file found starting with '{factory_id}' in {factory_dir}")
+
+                # Use the first file found
+                factory_file = found_files[0]
+
                 # Load full factory config
-                factory_file = Path(f'/app/config/factories/{factory_id}.json')
                 with open(factory_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
 
