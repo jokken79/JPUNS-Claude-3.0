@@ -173,20 +173,20 @@ class Candidate(Base):
     work_history_exit_company_7 = Column(String(200))  # 職歴退社会社名7
 
     # 経験作業 (Work Experience)
-    exp_nc_lathe = Column(String(10))  # NC旋盤
-    exp_lathe = Column(String(10))  # 旋盤
-    exp_press = Column(String(10))  # ﾌﾟﾚｽ
-    exp_forklift = Column(String(10))  # ﾌｫｰｸﾘﾌﾄ
-    exp_packing = Column(String(10))  # 梱包
-    exp_welding = Column(String(10))  # 溶接
-    exp_car_assembly = Column(String(10))  # 車部品組立
-    exp_car_line = Column(String(10))  # 車部品ライン
-    exp_car_inspection = Column(String(10))  # 車部品検査
-    exp_electronic_inspection = Column(String(10))  # 電子部品検査
-    exp_food_processing = Column(String(10))  # 食品加工
-    exp_casting = Column(String(10))  # 鋳造
-    exp_line_leader = Column(String(10))  # ラインリーダー
-    exp_painting = Column(String(10))  # 塗装
+    exp_nc_lathe = Column(Boolean)  # NC旋盤
+    exp_lathe = Column(Boolean)  # 旋盤
+    exp_press = Column(Boolean)  # ﾌﾟﾚｽ
+    exp_forklift = Column(Boolean)  # ﾌｫｰｸﾘﾌﾄ
+    exp_packing = Column(Boolean)  # 梱包
+    exp_welding = Column(Boolean)  # 溶接
+    exp_car_assembly = Column(Boolean)  # 車部品組立
+    exp_car_line = Column(Boolean)  # 車部品ライン
+    exp_car_inspection = Column(Boolean)  # 車部品検査
+    exp_electronic_inspection = Column(Boolean)  # 電子部品検査
+    exp_food_processing = Column(Boolean)  # 食品加工
+    exp_casting = Column(Boolean)  # 鋳造
+    exp_line_leader = Column(Boolean)  # ラインリーダー
+    exp_painting = Column(Boolean)  # 塗装
     exp_other = Column(Text)  # その他
 
     # お弁当 (Lunch/Bento Options)

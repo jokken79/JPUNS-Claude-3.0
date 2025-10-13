@@ -95,20 +95,20 @@ class CandidateBase(BaseModel):
     work_history_exit_company_7: Optional[str] = None
 
     # 経験作業 (Work Experience)
-    exp_nc_lathe: Optional[str] = None
-    exp_lathe: Optional[str] = None
-    exp_press: Optional[str] = None
-    exp_forklift: Optional[str] = None
-    exp_packing: Optional[str] = None
-    exp_welding: Optional[str] = None
-    exp_car_assembly: Optional[str] = None
-    exp_car_line: Optional[str] = None
-    exp_car_inspection: Optional[str] = None
-    exp_electronic_inspection: Optional[str] = None
-    exp_food_processing: Optional[str] = None
-    exp_casting: Optional[str] = None
-    exp_line_leader: Optional[str] = None
-    exp_painting: Optional[str] = None
+    exp_nc_lathe: Optional[bool] = None
+    exp_lathe: Optional[bool] = None
+    exp_press: Optional[bool] = None
+    exp_forklift: Optional[bool] = None
+    exp_packing: Optional[bool] = None
+    exp_welding: Optional[bool] = None
+    exp_car_assembly: Optional[bool] = None
+    exp_car_line: Optional[bool] = None
+    exp_car_inspection: Optional[bool] = None
+    exp_electronic_inspection: Optional[bool] = None
+    exp_food_processing: Optional[bool] = None
+    exp_casting: Optional[bool] = None
+    exp_line_leader: Optional[bool] = None
+    exp_painting: Optional[bool] = None
     exp_other: Optional[str] = None
 
     # お弁当 (Lunch/Bento Options)
