@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { faker } from '@faker-js/faker';
+import OCRUploader from '../components/OCRUploader';
+import { InformationCircleIcon } from '@heroicons/react/24/outline';
 
 // A simplified candidate type for the form state
-// We will expand this as we build the form
 type CandidateFormData = {
   [key: string]: any;
   full_name_kanji?: string;
@@ -18,6 +19,7 @@ const CandidateForm: React.FC = () => {
   const [candidate, setCandidate] = useState<CandidateFormData>({});
   const [loading, setLoading] = useState(false);
   const [isNew, setIsNew] = useState(true);
+  const [showOCRUploader, setShowOCRUploader] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -71,8 +73,13 @@ const CandidateForm: React.FC = () => {
         throw new Error(errorData.detail || 'サーバーエラーが発生しました。');
       }
 
+      const savedCandidate = await response.json();
       toast.success(isNew ? '候補者を正常に作成しました。' : '候補者を正常に更新しました。');
-      navigate('/pending-approval'); // Redirect to the list after saving
+
+      // If we're on the edit page already, stay here
+      if (isNew) {
+        navigate(`/candidates/${savedCandidate.id}`);
+      }
 
     } catch (error: any) {
       toast.error(`保存に失敗しました: ${error.message}`);
@@ -80,6 +87,46 @@ const CandidateForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOCRComplete = (ocrData: any) => {
+    // Mapping from OCR data to candidate fields
+    const mappedData: Partial<CandidateFormData> = {};
+
+    // Direct mappings
+    if (ocrData.full_name_kanji) mappedData.full_name_kanji = ocrData.full_name_kanji;
+    if (ocrData.full_name_kana) mappedData.full_name_kana = ocrData.full_name_kana;
+    if (ocrData.address) mappedData.current_address = ocrData.address;
+    if (ocrData.phone) mappedData.phone = ocrData.phone;
+    if (ocrData.email) mappedData.email = ocrData.email;
+
+    // Special mappings
+    if (ocrData.date_of_birth) {
+      // Format date if needed (assuming ISO format from OCR)
+      mappedData.date_of_birth = ocrData.date_of_birth;
+    }
+
+    // Mapping for Zairyu Card specific fields
+    if (ocrData.nationality) mappedData.nationality = ocrData.nationality;
+    if (ocrData.visa_status) mappedData.residence_status = ocrData.visa_status;
+    if (ocrData.zairyu_expire_date) mappedData.residence_expiry = ocrData.zairyu_expire_date;
+    if (ocrData.zairyu_card_number) mappedData.residence_card_number = ocrData.zairyu_card_number;
+
+    // For driver's license
+    if (ocrData.license_number) mappedData.license_number = ocrData.license_number;
+    if (ocrData.license_expire_date) mappedData.license_expiry = ocrData.license_expire_date;
+
+    // Update the form with OCR extracted data
+    setCandidate(prev => ({
+      ...prev,
+      ...mappedData
+    }));
+
+    // Show notification
+    toast.success('OCRデータをフォームに適用しました。内容を確認して必要に応じて編集してください。');
+
+    // Hide OCR uploader after successful processing
+    setShowOCRUploader(false);
   };
 
   const fillWithDummyData = () => {
@@ -134,6 +181,13 @@ const CandidateForm: React.FC = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">履歴書フォーム</h2>
           <div>
+            <button
+              type="button"
+              onClick={() => setShowOCRUploader(!showOCRUploader)}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 mr-2"
+            >
+              {showOCRUploader ? 'OCRアップローダーを閉じる' : 'OCRでドキュメントをスキャン'}
+            </button>
             <button type="button" onClick={fillWithDummyData} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 mr-2">
               Fill with Dummy Data
             </button>
@@ -146,12 +200,23 @@ const CandidateForm: React.FC = () => {
             <button type="button" onClick={() => console.log(candidate)} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700">
               Log Candidate
             </button>
-            <button type="button" onClick={() => setCandidate({})} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700">
-              Reset Form
-            </button>
           </div>
         </div>
-        
+
+        {/* OCR Uploader */}
+        {showOCRUploader && (
+          <div className="mb-6">
+            <OCRUploader onOCRComplete={handleOCRComplete} />
+            <div className="mt-4 p-4 bg-blue-50 rounded-md flex items-start">
+              <InformationCircleIcon className="h-6 w-6 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-700">
+                <p className="font-medium">OCRについて</p>
+                <p>履歴書や在留カードなどのドキュメントをアップロードすると、システムが自動的に情報を抽出してフォームに入力します。抽出された情報は必ず確認し、必要に応じて修正してください。</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Personal Information Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -219,6 +284,10 @@ const CandidateForm: React.FC = () => {
             <div>
                 <label htmlFor="mobile" className="block text-sm font-medium text-gray-700">携帯電話 (Mobile)</label>
                 <input type="text" name="mobile" id="mobile" value={candidate.mobile || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">メールアドレス (Email)</label>
+                <input type="email" name="email" id="email" value={candidate.email || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
             </div>
         </div>
 
@@ -335,6 +404,46 @@ const CandidateForm: React.FC = () => {
                     rows={3}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                  />
+            </div>
+        </div>
+
+        {/* Emergency Contact Section */}
+        <div className="mt-10">
+            <h3 className="text-lg font-medium leading-6 text-gray-900">緊急連絡先 (Emergency Contact)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                <div>
+                    <label htmlFor="emergency_contact_name" className="block text-sm font-medium text-gray-700">氏名 (Name)</label>
+                    <input
+                        type="text"
+                        name="emergency_contact_name"
+                        id="emergency_contact_name"
+                        value={candidate.emergency_contact_name || ''}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="emergency_contact_relation" className="block text-sm font-medium text-gray-700">続柄 (Relation)</label>
+                    <input
+                        type="text"
+                        name="emergency_contact_relation"
+                        id="emergency_contact_relation"
+                        value={candidate.emergency_contact_relation || ''}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="emergency_contact_phone" className="block text-sm font-medium text-gray-700">電話番号 (Phone)</label>
+                    <input
+                        type="text"
+                        name="emergency_contact_phone"
+                        id="emergency_contact_phone"
+                        value={candidate.emergency_contact_phone || ''}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    />
+                </div>
             </div>
         </div>
 

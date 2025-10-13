@@ -5,5 +5,37 @@
     ],
     "deny": [],
     "ask": []
+  },
+  "projectContext": {
+    "name": "UNS-ClaudeJP 3.0",
+    "type": "fullstack-web-app",
+    "stack": ["FastAPI", "React", "TypeScript", "PostgreSQL", "Docker"],
+    "mainBranch": "main"
+  },
+  "autoLoad": {
+    "contextFiles": [
+      "CLAUDE.md",
+      "README.md",
+      "CHANGELOG.md"
+    ]
+  },
+  "shortcuts": {
+    "backend": "cd backend && docker exec -it uns-claudejp-backend bash",
+    "frontend": "cd frontend && docker exec -it uns-claudejp-frontend bash",
+    "db": "docker exec -it uns-claudejp-db psql -U uns_admin -d uns_claudejp",
+    "logs-backend": "docker logs -f uns-claudejp-backend",
+    "logs-frontend": "docker logs -f uns-claudejp-frontend"
+  },
+  "codeStyle": {
+    "python": {
+      "formatter": "black",
+      "maxLineLength": 100,
+      "importOrder": ["standard-library", "third-party", "local"]
+    },
+    "typescript": {
+      "quotes": "single",
+      "semi": true,
+      "tabWidth": 2
+    }
   }
 }

@@ -1,0 +1,27 @@
+{
+  "name": "jpuns-claude-3.0",
+  "version": "1.0.0",
+  "description": "Sistema completo de gestión de recursos humanos para empresas japonesas, desarrollado con FastAPI (Python) y React (TypeScript).",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jokken79/JPUNS-Claude-3.0.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jokken79/JPUNS-Claude-3.0/issues"
+  },
+  "homepage": "https://github.com/jokken79/JPUNS-Claude-3.0#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.56.0"
+  }
+}

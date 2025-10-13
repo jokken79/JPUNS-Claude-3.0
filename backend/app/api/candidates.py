@@ -18,8 +18,7 @@ from app.schemas.candidate import (
 )
 from app.schemas.base import PaginatedResponse
 from app.services.auth_service import auth_service
-# OCR service removed - using Azure OCR instead
-# from app.services.ocr_service import ocr_service
+from app.services.azure_ocr_service import azure_ocr_service
 
 import logging
 
@@ -87,7 +86,7 @@ async def create_candidate(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Candidate name (Kanji or Roman) is required.",
         )
-        
+
     # Generate Rirekisho ID
     rirekisho_id = generate_rirekisho_id(db)
 
@@ -117,11 +116,11 @@ async def list_candidates(
     List all candidates with pagination
     """
     query = db.query(Candidate)
-    
+
     # Apply filters
     if status_filter:
         query = query.filter(Candidate.status == status_filter)
-    
+
     if search:
         query = query.filter(
             (Candidate.full_name_kanji.ilike(f"%{search}%")) |
@@ -129,13 +128,13 @@ async def list_candidates(
             (Candidate.full_name_roman.ilike(f"%{search}%")) |
             (Candidate.rirekisho_id.ilike(f"%{search}%"))
         )
-    
+
     # Get total count
     total = query.count()
-    
+
     # Apply pagination
     candidates = query.offset((page - 1) * page_size).limit(page_size).all()
-    
+
     return {
         "items": candidates,
         "total": total,
@@ -179,14 +178,14 @@ async def update_candidate(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidate not found"
         )
-    
+
     # Update fields
     for field, value in candidate_update.model_dump(exclude_unset=True).items():
         setattr(candidate, field, value)
-    
+
     db.commit()
     db.refresh(candidate)
-    
+
     return candidate
 
 
@@ -205,10 +204,10 @@ async def delete_candidate(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidate not found"
         )
-    
+
     db.delete(candidate)
     db.commit()
-    
+
     return {"message": "Candidate deleted successfully"}
 
 
@@ -230,7 +229,7 @@ async def upload_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidate not found"
         )
-    
+
     # Validate file type
     file_ext = os.path.splitext(file.filename)[1].lower().replace('.', '')
     if file_ext not in settings.ALLOWED_EXTENSIONS:
@@ -238,27 +237,38 @@ async def upload_document(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"File type not allowed. Allowed types: {settings.ALLOWED_EXTENSIONS}"
         )
-    
+
     # Create upload directory if not exists
     upload_dir = os.path.join(settings.UPLOAD_DIR, "candidates", str(candidate_id))
     os.makedirs(upload_dir, exist_ok=True)
-    
+
     # Save file
     file_path = os.path.join(upload_dir, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    
+
     # Process with OCR
     ocr_data = None
-    if document_type in ["rirekisho", "zairyu_card"]:
+    if document_type in ["rirekisho", "zairyu_card", "license"]:
         try:
-            # OCR processing removed - using Azure OCR service instead
-            # OCR functionality will be implemented separately
-            ocr_data = OCRData(raw_text="OCR service temporarily unavailable")
+            # Process with Azure OCR service
+            ocr_result = azure_ocr_service.process_document(file_path, document_type)
+
+            # Convert to OCRData model
+            ocr_data = OCRData(
+                full_name_kanji=ocr_result.get('name_kanji'),
+                full_name_kana=ocr_result.get('name_kana'),
+                date_of_birth=ocr_result.get('birthday'),
+                gender=ocr_result.get('gender'),
+                address=ocr_result.get('address'),
+                phone=ocr_result.get('phone'),
+                email=ocr_result.get('email'),
+                raw_text=ocr_result.get('raw_text', '') or ocr_result.get('extracted_text', '')
+            )
         except Exception as e:
-            print(f"OCR processing error: {e}")
+            logger.error(f"OCR processing error: {e}")
             ocr_data = OCRData(raw_text=f"Error processing: {str(e)}")
-    
+
     # Save document record
     document = Document(
         candidate_id=candidate_id,
@@ -270,11 +280,11 @@ async def upload_document(
         ocr_data=ocr_data.model_dump() if ocr_data else None,
         uploaded_by=current_user.id
     )
-    
+
     db.add(document)
     db.commit()
     db.refresh(document)
-    
+
     return DocumentUpload(
         document_id=document.id,
         file_name=file.filename,
@@ -300,7 +310,7 @@ async def approve_candidate(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidate not found"
         )
-    
+
     candidate.status = CandidateStatus.APPROVED
     candidate.approved_by = current_user.id
     candidate.approved_at = func.now()
@@ -346,8 +356,9 @@ async def approve_candidate(
                 postal_code=candidate.postal_code,
                 phone=candidate.mobile or candidate.phone,
                 email=candidate.email,
-                emergency_contact=_build_emergency_contact(candidate),
-                emergency_phone=candidate.emergency_contact_phone,
+                emergency_contact_name=candidate.emergency_contact_name,
+                emergency_contact_relationship=candidate.emergency_contact_relation,
+                emergency_contact_phone=candidate.emergency_contact_phone,
                 hire_date=approve_data.hire_date or candidate.hire_date,
                 jikyu=jikyu_value,
                 position=approve_data.position,
@@ -397,7 +408,7 @@ async def reject_candidate(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidate not found"
         )
-    
+
     candidate.status = CandidateStatus.REJECTED
     candidate.approved_by = current_user.id
     candidate.approved_at = func.now()
@@ -421,11 +432,15 @@ async def process_ocr_document(
 ):
     """
     Process document with OCR without creating candidate
-    Returns extracted data including face photo for zairyu card
+    Returns extracted data including personal information
+
+    Supported document types:
+    - rirekisho: Resume/CV (履歴書)
+    - zairyu_card: Residence Card (在留カード)
+    - license: Driver's License (免許証)
     """
-    logger.info("Starting OCR process")
+    logger.info(f"Starting OCR process for {document_type}")
     import tempfile
-    import json
 
     # Validate file type
     logger.info(f"Validating file type for {file.filename}")
@@ -453,26 +468,19 @@ async def process_ocr_document(
         )
 
     try:
-        logger.info("Processing document with OCR service")
-        # Process with OCR with a timeout
-        ocr_result = await asyncio.wait_for(
-            # OCR processing removed - using Azure OCR service instead
-            # OCR functionality will be implemented separately
-            asyncio.to_thread(lambda: {"success": False, "raw_text": "OCR service temporarily unavailable"}),
-            timeout=60.0
-        )
+        logger.info("Processing document with Azure OCR service")
+        # Process with Azure OCR service
+        ocr_result = azure_ocr_service.process_document(tmp_path, document_type)
         logger.info("OCR processing complete")
+
+        # Add document type to the result
+        ocr_result["document_type"] = document_type
 
         return {
             "success": True,
-            "data": ocr_result
+            "data": ocr_result,
+            "message": "Document processed successfully"
         }
-    except asyncio.TimeoutError:
-        logger.error("OCR processing timed out")
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="OCR processing timed out after 60 seconds"
-        )
     except Exception as e:
         logger.error(f"OCR processing error: {e}")
         raise HTTPException(

@@ -36,7 +36,12 @@
       "Read(//d/**)",
       "Bash(cmd /c:*)",
       "Bash(dir:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Read(//c/Users/JPUNS/AppData/Roaming/Code/User/**)",
+      "SlashCommand(/init)",
+      "Bash(code --list-extensions)",
+      "Bash(taskkill:*)",
+      "Bash(code .)"
     ],
     "deny": [],
     "ask": []
