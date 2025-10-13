@@ -1,6 +1,51 @@
+@import "./styles/themes/theme-default.css";
+@import "./styles/themes/theme-dark.css";
+@import "./styles/themes/theme-corporate.css";
+@import "./styles/themes/theme-smarthr.css";
+@import "./styles/themes/theme-futuristic.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Base theme variables fallback */
+:root {
+  --color-primary: #2563EB;
+  --color-secondary: #4F46E5;
+  --color-accent: #DB2777;
+  --color-background-base: #F9FAFB;
+  --color-background-muted: #F3F4F6;
+  --color-background-highlight: #FFFFFF;
+  --color-text-base: #1F2937;
+  --color-text-muted: #6B7280;
+  --color-text-inverted: #FFFFFF;
+  --color-border-base: #D1D5DB;
+  --color-border-muted: #E5E7EB;
+  --color-success: #16A34A;
+  --color-warning: #F59E0B;
+  --color-danger: #DC2626;
+}
+
+/* Ensure theme classes are applied properly */
+:root.theme-default {
+  /* Default theme variables will override the base */
+}
+
+:root.theme-dark {
+  /* Dark theme variables will override the base */
+}
+
+:root.theme-corporate {
+  /* Corporate theme variables will override the base */
+}
+
+:root.theme-smarthr {
+  /* SmartHR theme variables will override the base */
+}
+
+:root.theme-futuristic {
+  /* Futuristic theme variables will override the base */
+}
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&display=swap');
 

@@ -110,6 +110,7 @@ services:
       - ./uploads:/app/uploads
       - ./config:/app/config
       - ./logs:/app/logs
+      - ./.env:/app/.env
     ports:
       - "8000:8000"
     depends_on:

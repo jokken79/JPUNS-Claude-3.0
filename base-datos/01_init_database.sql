@@ -317,9 +317,9 @@ CREATE TABLE staff (
 );
 SELECT log_message('✓ Tabla staff creada');
 
--- Tabla: contract_workers
-SELECT log_message('Creando tabla: contract_workers');
-CREATE TABLE contract_workers (
+-- Tabla: extra_workers (renombrada para evitar duplicidad)
+SELECT log_message('Creando tabla: extra_workers');
+CREATE TABLE extra_workers (
     id SERIAL PRIMARY KEY,
     hakenmoto_id INTEGER UNIQUE NOT NULL,
     full_name_kanji VARCHAR(100),
@@ -334,11 +334,11 @@ CREATE TABLE contract_workers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-SELECT log_message('✓ Tabla contract_workers creada');
+SELECT log_message('✓ Tabla extra_workers creada');
 
--- Tabla: staff
-SELECT log_message('Creando tabla: staff');
-CREATE TABLE staff (
+-- Tabla: assistants (renombrada para evitar duplicidad)
+SELECT log_message('Creando tabla: assistants');
+CREATE TABLE assistants (
     id SERIAL PRIMARY KEY,
     staff_id INTEGER UNIQUE NOT NULL,
     full_name_kanji VARCHAR(100),
@@ -348,7 +348,7 @@ CREATE TABLE staff (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-SELECT log_message('✓ Tabla staff creada');
+SELECT log_message('✓ Tabla assistants creada');
 
 -- Tabla: requests
 SELECT log_message('Creando tabla: requests');
@@ -424,7 +424,8 @@ SELECT log_message('✓ Tabla salary_records creada');
 SELECT log_message('Creando índices...');
 
 CREATE INDEX idx_employees_factory ON employees(factory_id);
-CREATE INDEX idx_employees_status ON employees(status);
+-- CREATE INDEX idx_employees_status ON employees(status); -- Comentado porque la columna no existe
+CREATE INDEX idx_employees_is_active ON employees(is_active);
 CREATE INDEX idx_employees_hakenmoto ON employees(hakenmoto_id);
 CREATE INDEX idx_candidates_status ON candidates(status);
 CREATE INDEX idx_candidates_rirekisho ON candidates(rirekisho_id);

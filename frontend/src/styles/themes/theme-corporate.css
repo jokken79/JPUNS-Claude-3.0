@@ -1,0 +1,20 @@
+:root.theme-corporate {
+  --color-primary: #00529B; /* UNS Blue */
+  --color-secondary: #003F7A; /* Darker UNS Blue */
+  --color-accent: #FFC107; /* Amber accent */
+
+  --color-background-base: #FFFFFF; /* white */
+  --color-background-muted: #F0F4F8; /* light-blue-gray */
+  --color-background-highlight: #FFFFFF; /* white */
+
+  --color-text-base: #212529; /* near-black */
+  --color-text-muted: #6C757D; /* gray */
+  --color-text-inverted: #FFFFFF; /* white */
+
+  --color-border-base: #DEE2E6; /* light-gray */
+  --color-border-muted: #F0F4F8; /* lighter-blue-gray */
+
+  --color-success: #28A745; /* bootstrap-green */
+  --color-warning: #FFC107; /* bootstrap-yellow */
+  --color-danger: #DC3545; /* bootstrap-red */
+}

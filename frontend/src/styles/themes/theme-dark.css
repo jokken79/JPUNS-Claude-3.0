@@ -1,0 +1,20 @@
+:root.theme-dark {
+  --color-primary: #38BDF8; /* lightBlue-400 */
+  --color-secondary: #818CF8; /* indigo-400 */
+  --color-accent: #F472B6; /* pink-400 */
+  
+  --color-background-base: #1A202C; /* gray-800 */
+  --color-background-muted: #2D3748; /* gray-700 */
+  --color-background-highlight: #4A5568; /* gray-600 */
+
+  --color-text-base: #F7FAFC; /* gray-100 */
+  --color-text-muted: #A0AEC0; /* gray-400 */
+  --color-text-inverted: #1A202C; /* gray-800 */
+
+  --color-border-base: #4A5568; /* gray-600 */
+  --color-border-muted: #2D3748; /* gray-700 */
+
+  --color-success: #48BB78; /* green-500 */
+  --color-warning: #F59E0B; /* amber-500 */
+  --color-danger: #F56565; /* red-500 */
+}

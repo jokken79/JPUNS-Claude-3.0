@@ -1,0 +1,20 @@
+:root.theme-smarthr {
+  --color-primary: #3B82F6; /* blue-500 */
+  --color-secondary: #6366F1; /* indigo-500 */
+  --color-accent: #EC4899; /* pink-500 */
+
+  --color-background-base: #FFFFFF; /* white */
+  --color-background-muted: #F8F9FA; /* very-light-gray */
+  --color-background-highlight: #FFFFFF; /* white */
+
+  --color-text-base: #2D3748; /* gray-700 */
+  --color-text-muted: #6B7280; /* gray-500 */
+  --color-text-inverted: #FFFFFF; /* white */
+
+  --color-border-base: #E5E7EB; /* gray-200 */
+  --color-border-muted: #F3F4F6; /* gray-100 */
+
+  --color-success: #22C55E; /* green-500 */
+  --color-warning: #F59E0B; /* amber-500 */
+  --color-danger: #EF4444; /* red-500 */
+}

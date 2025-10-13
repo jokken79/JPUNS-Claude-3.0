@@ -1,0 +1,20 @@
+:root.theme-futuristic {
+  --color-primary: #39FF14; /* neon-green */
+  --color-secondary: #FF00FF; /* magenta */
+  --color-accent: #00FFFF; /* cyan */
+
+  --color-background-base: #0D0D0D; /* near-black */
+  --color-background-muted: #1A1A1A; /* dark-gray */
+  --color-background-highlight: #2B2B2B; /* darker-gray */
+
+  --color-text-base: #39FF14; /* neon-green */
+  --color-text-muted: #A0AEC0; /* gray-400 */
+  --color-text-inverted: #0D0D0D; /* near-black */
+
+  --color-border-base: #39FF14; /* neon-green */
+  --color-border-muted: #2B2B2B; /* darker-gray */
+
+  --color-success: #39FF14; /* neon-green */
+  --color-warning: #FFFF00; /* yellow */
+  --color-danger: #FF00FF; /* magenta */
+}
