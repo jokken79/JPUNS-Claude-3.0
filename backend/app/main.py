@@ -48,9 +48,11 @@ Todas las respuestas retornan JSON estructurado con mensajes y códigos claros.
     ],
 )
 
-app.add_middleware(SecurityMiddleware)
+# Middleware order matters: outermost first (processes response last)
+# Exception handler should be outermost to catch all errors
 app.add_middleware(ExceptionHandlerMiddleware)
 app.add_middleware(LoggingMiddleware)
+app.add_middleware(SecurityMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -58,23 +60,58 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*" if settings.DEBUG else "uns-kikaku.com"])
+# TrustedHostMiddleware should use a list for production
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"] if settings.DEBUG else ["uns-kikaku.com", "*.uns-kikaku.com", "localhost"]
+)
 
-os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-os.makedirs(os.path.dirname(settings.LOG_FILE), exist_ok=True)
+# Ensure required directories exist
+try:
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    os.makedirs(os.path.dirname(settings.LOG_FILE), exist_ok=True)
+    app_logger.info("Required directories created/verified")
+except Exception as exc:
+    app_logger.warning(f"Could not create directories: {exc}")
 
-if os.path.exists(settings.UPLOAD_DIR):
-    app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+# Mount static files for uploads
+try:
+    if os.path.exists(settings.UPLOAD_DIR) and os.path.isdir(settings.UPLOAD_DIR):
+        app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+        app_logger.info(f"Mounted static files from {settings.UPLOAD_DIR}")
+except Exception as exc:
+    app_logger.warning(f"Could not mount static files: {exc}")
 
 
 @app.on_event("startup")
 async def on_startup() -> None:
-    app_logger.info("Starting application", version=settings.APP_VERSION, environment=settings.ENVIRONMENT)
+    """Application startup event handler."""
+    app_logger.info(
+        "Starting application",
+        app_name=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        environment=settings.ENVIRONMENT,
+        debug=settings.DEBUG,
+    )
+    
+    # Initialize database tables
     try:
         init_db()
-        app_logger.info("Database initialised")
+        app_logger.info("Database tables initialized successfully")
     except Exception as exc:  # pragma: no cover - database might be unavailable in tests
-        app_logger.exception("Database init failed", error=str(exc))
+        app_logger.exception("Database initialization failed", error=str(exc))
+        if not settings.DEBUG:
+            # In production, we might want to fail fast
+            app_logger.critical("Cannot start application without database")
+            raise
+    
+    # Log configuration summary
+    app_logger.info(
+        "Application configuration",
+        cors_origins=len(settings.BACKEND_CORS_ORIGINS),
+        upload_dir=settings.UPLOAD_DIR,
+        ocr_enabled=settings.OCR_ENABLED,
+    )
 
 
 @app.on_event("shutdown")
@@ -96,7 +133,36 @@ async def root() -> dict:
 
 @app.get("/api/health")
 async def health_check() -> dict:
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    """Health check endpoint with database connectivity verification."""
+    from sqlalchemy import text
+    
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": settings.APP_VERSION,
+        "environment": settings.ENVIRONMENT,
+    }
+    
+    # Check database connectivity
+    try:
+        from app.core.database import SessionLocal
+        db = SessionLocal()
+        try:
+            # Simple query to check database is responsive
+            db.execute(text("SELECT 1"))
+            health_status["database"] = "connected"
+        except Exception as db_exc:
+            app_logger.error(f"Database health check failed: {db_exc}")
+            health_status["database"] = "disconnected"
+            health_status["status"] = "degraded"
+        finally:
+            db.close()
+    except Exception as exc:
+        app_logger.error(f"Database connection error: {exc}")
+        health_status["database"] = "error"
+        health_status["status"] = "degraded"
+    
+    return health_status
 
 
 @app.exception_handler(404)
@@ -113,35 +179,47 @@ async def internal_error_handler(request: Request, exc: Exception) -> JSONRespon
     )
 
 
-from app.api import (  # noqa: E402  pylint: disable=wrong-import-position
-    auth,
-    candidates,
-    azure_ocr,
-    dashboard,
-    employees,
-    factories,
-    import_export,
-    monitoring,
-    notifications,
-    reports,
-    requests,
-    salary,
-    timer_cards,
-)
+# Import and register API routers
+# Note: Imports are after app initialization to avoid circular dependencies
+try:
+    from app.api import (  # noqa: E402  pylint: disable=wrong-import-position
+        auth,
+        candidates,
+        azure_ocr,
+        dashboard,
+        employees,
+        factories,
+        import_export,
+        monitoring,
+        notifications,
+        reports,
+        requests,
+        salary,
+        timer_cards,
+    )
 
-app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(candidates.router, prefix="/api/candidates", tags=["Candidates"])
-app.include_router(azure_ocr.router, prefix="/api/azure-ocr", tags=["Azure OCR"])
-app.include_router(employees.router, prefix="/api/employees", tags=["Employees"])
-app.include_router(factories.router, prefix="/api/factories", tags=["Factories"])
-app.include_router(timer_cards.router, prefix="/api/timer-cards", tags=["Timer Cards"])
-app.include_router(salary.router, prefix="/api/salary", tags=["Salary"])
-app.include_router(requests.router, prefix="/api/requests", tags=["Requests"])
-app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
-app.include_router(import_export.router, prefix="/api/import", tags=["Import/Export"])
-app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
-app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
-app.include_router(monitoring.router, prefix="/api/monitoring", tags=["Monitoring"])
+    # Register all API routers
+    app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+    app.include_router(candidates.router, prefix="/api/candidates", tags=["Candidates"])
+    app.include_router(azure_ocr.router, prefix="/api/azure-ocr", tags=["Azure OCR"])
+    app.include_router(employees.router, prefix="/api/employees", tags=["Employees"])
+    app.include_router(factories.router, prefix="/api/factories", tags=["Factories"])
+    app.include_router(timer_cards.router, prefix="/api/timer-cards", tags=["Timer Cards"])
+    app.include_router(salary.router, prefix="/api/salary", tags=["Salary"])
+    app.include_router(requests.router, prefix="/api/requests", tags=["Requests"])
+    app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+    app.include_router(import_export.router, prefix="/api/import", tags=["Import/Export"])
+    app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
+    app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
+    app.include_router(monitoring.router, prefix="/api/monitoring", tags=["Monitoring"])
+    
+    app_logger.info("All API routers registered successfully")
+except ImportError as exc:
+    app_logger.exception("Failed to import API routers", error=str(exc))
+    raise
+except Exception as exc:
+    app_logger.exception("Failed to register API routers", error=str(exc))
+    raise
 
 
 if __name__ == "__main__":  # pragma: no cover
