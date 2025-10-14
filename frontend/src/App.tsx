@@ -19,6 +19,7 @@ import Salary from './pages/Salary';
 import Requests from './pages/Requests';
 import ImportData from './pages/ImportData';
 import RirekishoPrintView from './pages/RirekishoPrintView';
+import RirekishoPrintViewJPModif from './pages/RirekishoPrintViewJPModif';
 import RirekishoPrintViewJPModif2 from './pages/RirekishoPrintViewJPModif2';
 
 // Components
@@ -120,6 +121,14 @@ function App() {
                 element={(
                   <ProtectedRoute>
                     <RirekishoPrintView />
+                  </ProtectedRoute>
+                )}
+              />
+              <Route
+                path="candidates/:id/print-jp"
+                element={(
+                  <ProtectedRoute>
+                    <RirekishoPrintViewJPModif />
                   </ProtectedRoute>
                 )}
               />
