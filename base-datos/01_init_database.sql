@@ -469,61 +469,21 @@ INSERT INTO apartments (apartment_code, address, monthly_rent, capacity, is_avai
 
 SELECT log_message('✓ 5 apartamentos insertados');
 
--- Candidatos
-SELECT log_message('Insertando candidatos...');
-INSERT INTO candidates (
-    rirekisho_id, full_name_kanji, full_name_kana, full_name_roman,
-    date_of_birth, gender, nationality, phone, mobile, email,
-    status, postal_code, visa_type, japanese_level
-) VALUES
-('R2025001', 'グエン・バン・アン', 'ぐえん・ばん・あん', 'Nguyen Van An', '1995-03-15', 'male', 'Vietnam', '03-1111-1111', '090-1234-5678', 'nguyen.a@example.com', 'pending', '170-0013', '技能実習', 'N3'),
-('R2025002', 'マリア・サントス', 'まりあ・さんとす', 'Maria Santos', '1992-07-20', 'female', 'Philippines', '045-2222-2222', '080-9876-5432', 'maria.s@example.com', 'approved', '231-0001', '特定技能', 'N4'),
-('R2025003', 'リウ・ウェイ', 'りう・うぇい', 'Liu Wei', '1998-11-08', 'male', 'China', '053-3333-3333', '070-1111-2222', 'liu.w@example.com', 'pending', '430-0928', '技術・人文知識', 'N2'),
-('R2025004', 'パテル・クマール', 'ぱてる・くまーる', 'Patel Kumar', '1994-05-25', 'male', 'India', '0565-4444-4444', '090-3333-4444', 'patel.k@example.com', 'pending', '471-0001', '技能実習', 'N4'),
-('R2025005', 'アナ・ロドリゲス', 'あな・ろどりげす', 'Ana Rodriguez', '1996-09-12', 'female', 'Brazil', '048-5555-5555', '080-5555-6666', 'ana.r@example.com', 'approved', '351-0033', '特定技能', 'N3');
+-- Candidatos de prueba eliminados - solo se importarán los datos reales desde archivos Excel
+SELECT log_message('Omitiendo candidatos de prueba - se importarán datos reales desde archivos Excel');
+SELECT log_message('✓ Candidatos de prueba omitidos correctamente');
 
-SELECT log_message('✓ 5 candidatos insertados');
+-- Empleados de prueba eliminados - solo se importarán los datos reales desde archivos Excel
+SELECT log_message('Omitiendo empleados de prueba - se importarán datos reales desde archivos Excel');
+SELECT log_message('✓ Empleados de prueba omitidos correctamente');
 
--- Empleados
-SELECT log_message('Insertando empleados...');
-INSERT INTO employees (
-    hakenmoto_id, rirekisho_id, factory_id, apartment_code,
-    full_name_kanji, full_name_kana, employee_number,
-    date_of_birth, gender, nationality,
-    phone, mobile, email,
-    hire_date, contract_start_date, contract_end_date,
-    hourly_wage, monthly_salary, status,
-    visa_type, position, department, contract_type
-) VALUES
-(1001, 'R2025002', 'PMI001', 'APT001', 'カルロス・メンデス', 'かるろす・めんです', 'EMP001', '1990-01-15', 'male', 'Peru', '03-1111-1111', '090-1111-1111', 'carlos.m@company.com', '2024-01-10', '2024-01-10', '2026-12-31', 1500, 240000, 'active', '特定技能', '製造作業員', '製造部', 'full-time'),
-(1002, NULL, 'NIP001', 'APT002', 'ソフィア・キム', 'そふぃあ・きむ', 'EMP002', '1993-05-20', 'female', 'South Korea', '045-2222-2222', '090-2222-2222', 'sofia.k@company.com', '2024-02-15', '2024-02-15', '2027-06-30', 1800, 288000, 'active', '技術・人文知識', '品質管理', '品質管理部', 'full-time'),
-(1003, NULL, 'YMH001', 'APT003', 'チャン・バン・ビー', 'ちゃん・ばん・びー', 'EMP003', '1995-09-10', 'male', 'Vietnam', '053-3333-3333', '090-3333-3333', 'tran.b@company.com', '2024-03-20', '2024-03-20', '2026-03-31', 1400, 224000, 'active', '技能実習', '製造作業員', '製造部', 'contract'),
-(1004, NULL, 'TOY001', 'APT004', 'ジェシカ・シルバ', 'じぇしか・しるば', 'EMP004', '1992-11-25', 'female', 'Brazil', '0565-4444-4444', '090-4444-4444', 'jessica.s@company.com', '2024-04-01', '2024-04-01', '2027-12-31', 1600, 256000, 'active', '特定技能', 'ライン作業', '製造部', 'full-time'),
-(1005, 'R2025005', 'HON001', 'APT005', 'アハメド・ハッサン', 'あはめど・はっさん', 'EMP005', '1991-07-30', 'male', 'Egypt', '048-5555-5555', '090-5555-5555', 'ahmed.h@company.com', '2024-05-10', '2024-05-10', '2026-09-30', 1700, 272000, 'active', '技能実習', '組立作業', '組立部', 'full-time');
+-- Timer Cards de prueba eliminados - solo se importarán datos reales desde archivos Excel
+SELECT log_message('Omitiendo registros de tiempo de prueba - se importarán datos reales desde archivos Excel');
+SELECT log_message('✓ Timer Cards de prueba omitidos correctamente');
 
-SELECT log_message('✓ 5 empleados insertados');
-
--- Timer Cards (últimos 7 días)
-SELECT log_message('Insertando registros de tiempo...');
-INSERT INTO timer_cards (hakenmoto_id, work_date, shift_type, clock_in, clock_out, break_minutes, overtime_minutes) VALUES
-(1001, CURRENT_DATE - INTERVAL '6 days', 'asa', '09:00', '18:00', 60, 0),
-(1001, CURRENT_DATE - INTERVAL '5 days', 'asa', '09:00', '18:00', 60, 0),
-(1001, CURRENT_DATE - INTERVAL '4 days', 'asa', '09:00', '18:00', 60, 0),
-(1002, CURRENT_DATE - INTERVAL '6 days', 'asa', '08:30', '17:30', 60, 0),
-(1002, CURRENT_DATE - INTERVAL '5 days', 'asa', '08:30', '17:30', 60, 0),
-(1003, CURRENT_DATE - INTERVAL '6 days', 'asa', '09:00', '19:00', 60, 60),
-(1003, CURRENT_DATE - INTERVAL '5 days', 'asa', '09:00', '18:30', 60, 30);
-
-SELECT log_message('✓ 7 registros de tiempo insertados');
-
--- Solicitudes
-SELECT log_message('Insertando solicitudes...');
-INSERT INTO requests (hakenmoto_id, request_type, start_date, end_date, reason, status) VALUES
-(1001, 'yukyu', CURRENT_DATE + INTERVAL '10 days', CURRENT_DATE + INTERVAL '12 days', '家族旅行', 'pending'),
-(1002, 'hankyu', CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE - INTERVAL '1 day', '体調不良', 'approved'),
-(1003, 'yukyu', CURRENT_DATE + INTERVAL '5 days', CURRENT_DATE + INTERVAL '5 days', '私用', 'pending');
-
-SELECT log_message('✓ 3 solicitudes insertadas');
+-- Solicitudes de prueba eliminadas - solo se importarán datos reales desde archivos Excel
+SELECT log_message('Omitiendo solicitudes de prueba - se importarán datos reales desde archivos Excel');
+SELECT log_message('✓ Solicitudes de prueba omitidas correctamente');
 
 -- ============================================
 -- VERIFICACIÓN FINAL
@@ -558,16 +518,14 @@ BEGIN
     PERFORM log_message('✓ Requests: ' || requests_count);
     PERFORM log_message('✓ Timer Cards: ' || timer_count);
     
-    IF users_count = 0 OR factories_count = 0 OR candidates_count = 0 OR employees_count = 0 THEN
+    IF factories_count = 0 OR candidates_count = 0 OR employees_count = 0 THEN
         RAISE EXCEPTION 'ERROR: No se insertaron todos los datos correctamente';
     ELSE
         PERFORM log_message('========================================');
         PERFORM log_message('✅ INICIALIZACIÓN COMPLETADA EXITOSAMENTE');
         PERFORM log_message('========================================');
         PERFORM log_message('');
-        PERFORM log_message('Credenciales de acceso:');
-        PERFORM log_message('  Usuario: admin@uns-kikaku.com');
-        PERFORM log_message('  Password: admin123');
+        PERFORM log_message('📝 Nota: Los usuarios se crearán mediante el script create_admin_user.py');
         PERFORM log_message('');
         PERFORM log_message('🎉 Base de datos lista para usar');
     END IF;

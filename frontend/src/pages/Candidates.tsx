@@ -15,8 +15,7 @@ const Candidates: React.FC = () => {
         <iframe
           src="/templates/rirekisho.html"
           title="履歴書フォーム"
-          className="w-full h-full border-0"
-          style={{ minHeight: 'calc(100vh - 200px)' }}
+          className="w-full h-full border-0 min-h-screen"
         />
       </div>
     </div>

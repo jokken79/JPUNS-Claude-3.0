@@ -88,10 +88,19 @@
         .ocr-status.processing { background: #DBEAFE; color: #1D4ED8; }
         .ocr-status.success { background: #D1FAE5; color: #059669; }
         .ocr-status.error { background: #FEE2E2; color: #DC2626; }
-        .required::after {
-            content: " *";
-            color: #DC2626;
-            font-weight: bold;
+        .responsive-table { overflow-x: auto; width: 100%; }
+        .responsive-table table { width: 100%; border-collapse: collapse; }
+        .responsive-table th, .responsive-table td {
+            padding: 8px 12px; border: 1px solid #e5e7eb; text-align: left;
+        }
+        .responsive-table th {
+            background-color: #DBEAFE; font-weight: 600; color: #1D4ED8;
+        }
+        .delete-btn {
+            background-color: #fee2e2; color: #ef4444;
+            border: none; border-radius: 50%;
+            width: 28px; height: 28px;
+            cursor: pointer; font-weight: bold;
         }
         .debug-info {
             position: fixed;
@@ -104,6 +113,139 @@
             font-size: 12px;
             max-width: 300px;
             z-index: 1000;
+        }
+
+        #preview_content {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background: #f1f5f9;
+            overflow: auto;
+        }
+
+        #preview_content .print-page {
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+        }
+
+        .print-page {
+            width: 297mm;
+            min-height: 210mm;
+            background: #ffffff;
+            color: #111827;
+            padding: 14mm 18mm;
+            box-sizing: border-box;
+            font-family: 'MS Gothic', 'Yu Gothic', sans-serif;
+            font-size: 9.5pt;
+            line-height: 1.5;
+        }
+
+        .print-header {
+            display: flex;
+            gap: 12mm;
+            align-items: stretch;
+            margin-bottom: 10mm;
+        }
+
+        .print-photo-frame {
+            width: 40mm;
+            height: 50mm;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+
+        .print-photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .print-basic-table,
+        .print-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .print-basic-table th,
+        .print-basic-table td,
+        .print-table th,
+        .print-table td {
+            border: 1px solid #000;
+            padding: 3mm;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .print-basic-table th,
+        .print-table th {
+            background: #e5e7eb;
+            font-weight: 600;
+        }
+
+        .print-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8mm;
+            margin-bottom: 10mm;
+        }
+
+        .print-section {
+            border: 1px solid #000;
+            padding: 4mm;
+        }
+
+        .print-section.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .print-section-title {
+            font-weight: 700;
+            font-size: 11pt;
+            margin-bottom: 3mm;
+            background: #e5e7eb;
+            padding: 2mm 3mm;
+            border-left: 3mm solid #1D4ED8;
+        }
+
+        .print-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .print-tag {
+            border: 1px solid #1D4ED8;
+            background: #eef2ff;
+            color: #1D4ED8;
+            border-radius: 9999px;
+            padding: 2px 8px;
+            font-size: 8.5pt;
+        }
+
+        .print-muted {
+            color: #6b7280;
+            font-size: 8.5pt;
+        }
+
+        .print-table td span.block {
+            display: block;
+        }
+
+        @media print {
+            body { margin: 0; padding: 0; }
+            #app { display: none !important; }
+            #print_container { display: block !important; }
+            .pdf-background { display: none !important; }
+            .print-overlay { display: none !important; }
+            .print-field { display: block !important; }
+            .print-photo { display: block !important; }
+            @page { size: A4 landscape; margin: 10mm; }
+            .print-page { width: auto; min-height: auto; margin: 0; padding: 10mm; box-shadow: none; }
+            .print-grid { gap: 6mm; }
+            #preview_modal { display: none !important; }
         }
     </style>
 </head>
@@ -122,7 +264,7 @@
         </header>
 
         <main class="space-y-8">
-             
+            
             <!-- OCR Section -->
             <section class="card p-5 sm:p-8 rounded-xl">
                 <h2 class="text-2xl font-bold mb-4 section-title">📷 書類OCR自動入力</h2>
@@ -196,8 +338,8 @@
                     <div class="flex-grow w-full">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
-                                <label class="block text-sm font-medium mb-1 required">氏名</label>
-                                <input type="text" id="name_kanji" placeholder="山田 太郎" required>
+                                <label class="block text-sm font-medium mb-1">氏名</label>
+                                <input type="text" id="name_kanji" placeholder="山田 太郎">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-1">フリガナ</label>
@@ -216,24 +358,21 @@
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
-                                <label class="block text-sm font-medium mb-1">生年月日</label>
+                                <label>生年月日</label>
                                 <input type="date" id="birthday">
                                 <small class="text-gray-500">形式: 年-月-日</small>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">年齢</label>
-                                <input type="number" id="age" min="18" max="80" readonly class="bg-gray-100">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">性別</label>
+                            <div><label>年齢</label><input type="number" id="age" min="18" max="80" readonly class="bg-gray-100"></div>
+                            <div><label>性別</label>
                                 <select id="gender">
                                     <option value="">選択</option>
                                     <option value="男性">男性</option>
                                     <option value="女性">女性</option>
                                 </select>
                             </div>
+                            <!-- MODIFICACIÓN: Campo de Nacionalidad a Select Box -->
                             <div>
-                                <label class="block text-sm font-medium mb-1">国籍</label>
+                                <label>国籍</label>
                                 <select id="nationality">
                                     <option value="">選択してください</option>
                                     <option value="日本">日本 (Japan)</option>
@@ -249,41 +388,20 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">郵便番号</label>
-                        <input type="text" id="postal_code" placeholder="000-0000">
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="block text-sm font-medium mb-1">住所</label>
-                        <input type="text" id="address">
-                    </div>
+                    <div><label>郵便番号</label><input type="text" id="postal_code" placeholder="000-0000"></div>
+                    <div class="md:col-span-3"><label>住所</label><input type="text" id="address"></div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">携帯電話</label>
-                        <input type="tel" id="mobile">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">電話番号</label>
-                        <input type="tel" id="phone">
-                    </div>
+                    <div><label>携帯電話</label><input type="tel" id="mobile"></div>
+                    <div><label>電話番号</label><input type="tel" id="phone"></div>
                 </div>
                 
                 <h3 class="font-semibold mt-6 mb-3">緊急連絡先</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">氏名</label>
-                        <input type="text" id="emergency_name">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">続柄</label>
-                        <input type="text" id="emergency_relation">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">電話番号</label>
-                        <input type="tel" id="emergency_phone">
-                    </div>
+                    <div><label>氏名</label><input type="text" id="emergency_name"></div>
+                    <div><label>続柄</label><input type="text" id="emergency_relation"></div>
+                    <div><label>電話番号</label><input type="tel" id="emergency_phone"></div>
                 </div>
             </section>
 
@@ -291,8 +409,7 @@
             <section class="card p-5 sm:p-8 rounded-xl">
                 <h2 class="text-2xl font-bold mb-4 section-title">書類関係</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">在留資格</label>
+                    <div><label>在留資格</label>
                         <select id="visa_type">
                             <option value="">選択してください</option>
                             <option value="技術・人文・国際業務">技術・人文・国際業務</option>
@@ -304,34 +421,21 @@
                             <option value="特定技能1号・2号">特定技能1号・2号</option>
                         </select>
                     </div>
+                    <div><label>在留期間</label><input type="text" id="visa_period" placeholder="例: 3年"></div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">在留期間</label>
-                        <input type="text" id="visa_period" placeholder="例: 3年">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">在留期間満了日</label>
+                        <label>在留期間満了日</label>
                         <input type="date" id="visa_expiry">
                         <small class="text-gray-500">形式: 年-月-日</small>
                     </div>
+                    <div><label>在留カード番号</label><input type="text" id="residence_card_no"></div>
+                    <div><label>パスポート番号</label><input type="text" id="passport_no"></div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">在留カード番号</label>
-                        <input type="text" id="residence_card_no">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">パスポート番号</label>
-                        <input type="text" id="passport_no">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">パスポート期限</label>
+                        <label>パスポート期限</label>
                         <input type="date" id="passport_expiry">
                         <small class="text-gray-500">形式: 年-月-日</small>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">運転免許番号</label>
-                        <input type="text" id="license_no">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">運転免許種類</label>
+                    <div><label>運転免許番号</label><input type="text" id="license_no"></div>
+                    <div><label>運転免許種類</label>
                         <select id="license_type">
                             <option value="">選択してください</option>
                             <option value="原付免許">原付免許</option>
@@ -341,22 +445,48 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">運転免許期限</label>
+                        <label>運転免許期限</label>
                         <input type="date" id="license_expiry">
                         <small class="text-gray-500">形式: 年-月-日</small>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">自動車所有</label>
+                        <label>自動車所有</label>
                         <div class="flex gap-4 mt-2">
                             <label><input type="radio" name="car_owner" value="有"> 有</label>
                             <label><input type="radio" name="car_owner" value="無"> 無</label>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">任意保険加入</label>
+                        <label>任意保険加入</label>
                         <div class="flex gap-4 mt-2">
                             <label><input type="radio" name="insurance" value="有"> 有</label>
                             <label><input type="radio" name="insurance" value="無"> 無</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campos adicionales extraídos por OCR -->
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-semibold text-blue-800 mb-3">OCRで抽出された追加情報</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label>地域</label><input type="text" id="region" readonly class="bg-gray-100"></div>
+                        <div>
+                            <label>許可年月日</label>
+                            <input type="date" id="permission_date" readonly class="bg-gray-100">
+                            <small class="text-gray-500">形式: 年-月-日</small>
+                        </div>
+                        <div>
+                            <label>カード発行日</label>
+                            <input type="date" id="issue_date" readonly class="bg-gray-100">
+                            <small class="text-gray-500">形式: 年-月-日</small>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label>就労活動の許可</label>
+                            <textarea id="authorized_activity" rows="2" readonly class="bg-gray-100"></textarea>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label>指定書就職活動の範囲</label>
+                            <textarea id="employer_restriction" rows="2" readonly class="bg-gray-100"></textarea>
                         </div>
                     </div>
                 </div>
@@ -365,29 +495,196 @@
             <!-- 日本語能力 -->
             <section class="card p-5 sm:p-8 rounded-xl">
                 <h2 class="text-2xl font-bold mb-4 section-title">日本語能力・学歴</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="responsive-table mb-4">
+                    <table>
+                        <thead>
+                            <tr><th>項目</th><th>評価</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>話す</td>
+                                <td>
+                                    <select id="speak_level">
+                                        <option value="初級">初級（挨拶程度）</option>
+                                        <option value="中級">中級（日常会話）</option>
+                                        <option value="上級">上級（通訳可）</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>聞く</td>
+                                <td>
+                                    <select id="listen_level">
+                                        <option value="初級">初級（挨拶程度）</option>
+                                        <option value="中級">中級（日常会話）</option>
+                                        <option value="上級">上級（通訳可）</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>漢字読み書き</td>
+                                <td>
+                                    <select id="kanji_level">
+                                        <option value="できる">できる</option>
+                                        <option value="少し">少し</option>
+                                        <option value="できない">できない</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>カナ読み</td>
+                                <td>
+                                    <select id="kana_read">
+                                        <option value="できる">できる</option>
+                                        <option value="少し">少し</option>
+                                        <option value="できない">できない</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>カナ書き</td>
+                                <td>
+                                    <select id="kana_write">
+                                        <option value="できる">できる</option>
+                                        <option value="少し">少し</option>
+                                        <option value="できない">できない</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3 class="font-semibold mb-3">学歴</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label>最終学歴</label><input type="text" id="education" placeholder="最終学歴を入力"></div>
+                    <div><label>専攻</label><input type="text" id="major" placeholder="専攻を入力"></div>
+                </div>
+            </section>
+
+            <!-- 身体情報 -->
+            <section class="card p-5 sm:p-8 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4 section-title">身体情報・健康状態</h2>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                    <div><label>身長(cm)</label><input type="number" id="height"></div>
+                    <div><label>体重(kg)</label><input type="number" id="weight"></div>
+                    <div><label>服のサイズ</label><input type="text" id="uniform_size"></div>
+                    <div><label>ウエスト(cm)</label><input type="number" id="waist"></div>
+                    <div><label>靴サイズ(cm)</label><input type="number" id="shoe_size"></div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div><label>血液型</label><input type="text" id="blood_type"></div>
+                    <div><label>視力(右)</label><input type="text" id="vision_right"></div>
+                    <div><label>視力(左)</label><input type="text" id="vision_left"></div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">最終学歴</label>
-                        <input type="text" id="education">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">専攻</label>
-                        <input type="text" id="major">
+                        <label>メガネ使用</label>
+                        <div class="flex gap-4 mt-2">
+                            <label><input type="radio" name="glasses" value="有"> 有</label>
+                            <label><input type="radio" name="glasses" value="無"> 無</label>
+                        </div>
                     </div>
                 </div>
+                
+                <div class="flex flex-wrap gap-6 mb-4">
+                    <div>
+                        <label>利き腕</label>
+                        <div class="flex gap-4 mt-2">
+                            <label><input type="radio" name="dominant_arm" value="右"> 右</label>
+                            <label><input type="radio" name="dominant_arm" value="左"> 左</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label>アレルギー</label>
+                        <div class="flex gap-4 mt-2">
+                            <label><input type="radio" name="allergy" value="有"> 有</label>
+                            <label><input type="radio" name="allergy" value="無"> 無</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label>安全靴持参</label>
+                        <div class="flex gap-4 mt-2">
+                            <label><input type="radio" name="safety_shoes" value="有"> 有</label>
+                            <label><input type="radio" name="safety_shoes" value="無"> 無</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="font-semibold mb-3">コロナワクチン</h3>
+                <div class="flex flex-wrap gap-4">
+                    <label><input type="radio" name="vaccine" value="未接種"> 未接種</label>
+                    <label><input type="radio" name="vaccine" value="1回"> 1回接種</label>
+                    <label><input type="radio" name="vaccine" value="2回"> 2回接種</label>
+                    <label><input type="radio" name="vaccine" value="3回"> 3回接種</label>
+                    <label><input type="radio" name="vaccine" value="4回"> 4回接種</label>
+                </div>
+            </section>
+
+            <!-- 有資格・経験 -->
+            <section class="card p-5 sm:p-8 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4 section-title">有資格取得・経験作業</h2>
+                <div class="mb-4">
+                    <label>有資格取得（フォークリフト、溶接など）</label>
+                    <textarea id="qualifications" rows="2"></textarea>
+                </div>
+                
+                <h3 class="font-semibold mb-3">経験作業内容</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <label><input type="checkbox" name="exp" value="NC旋盤"> NC旋盤</label>
+                    <label><input type="checkbox" name="exp" value="旋盤"> 旋盤</label>
+                    <label><input type="checkbox" name="exp" value="プレス"> プレス</label>
+                    <label><input type="checkbox" name="exp" value="フォークリフト"> フォークリフト</label>
+                    <label><input type="checkbox" name="exp" value="梱包"> 梱包</label>
+                    <label><input type="checkbox" name="exp" value="溶接"> 溶接</label>
+                    <label><input type="checkbox" name="exp" value="車部品組立"> 車部品組立</label>
+                    <label><input type="checkbox" name="exp" value="車部品ライン"> 車部品ライン</label>
+                    <label><input type="checkbox" name="exp" value="車部品検査"> 車部品検査</label>
+                    <label><input type="checkbox" name="exp" value="電子部品検査"> 電子部品検査</label>
+                    <label><input type="checkbox" name="exp" value="食品加工"> 食品加工</label>
+                    <label><input type="checkbox" name="exp" value="鋳造"> 鋳造</label>
+                    <label><input type="checkbox" name="exp" value="塗装"> 塗装</label>
+                    <label><input type="checkbox" value="ラインリーダー"> ラインリーダー</label>
+                </div>
+            </section>
+
+            <!-- 職務経歴 -->
+            <section class="card p-5 sm:p-8 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4 section-title">職務経歴</h2>
+                <div class="responsive-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>開始</th><th>終了</th><th>派遣元</th><th>派遣先</th><th>作業内容</th><th>退社理由</th><th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="job_history"></tbody>
+                    </table>
+                </div>
+                <button onclick="addJobEntry()" class="mt-4 btn-secondary">職歴追加</button>
+            </section>
+
+            <!-- 家族構成 -->
+            <section class="card p-5 sm:p-8 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4 section-title">家族構成</h2>
+                <div class="responsive-table">
+                    <table>
+                        <thead>
+                            <tr><th>氏名</th><th>続柄</th><th>生年月日</th><th>年齢</th><th>居住</th><th>扶養</th><th>操作</th></tr>
+                        </thead>
+                        <tbody id="family_members"></tbody>
+                    </table>
+                </div>
+                <button onclick="addFamilyEntry()" class="mt-4 btn-secondary">家族追加</button>
             </section>
 
             <!-- その他 -->
             <section class="card p-5 sm:p-8 rounded-xl">
                 <h2 class="text-2xl font-bold mb-4 section-title">その他</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label>通勤片道時間（分）</label><input type="number" id="commute_time" placeholder="通勤時間を入力"></div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">通勤片道時間（分）</label>
-                        <input type="number" id="commute_time">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">お弁当（社内食堂）</label>
-                        <select id="lunch_pref">
+                        <label>お弁当（社内食堂）</label>
+                        <select id="lunch_pref" title="お弁当の選択">
                             <option value="昼/夜">昼/夜</option>
                             <option value="昼のみ">昼のみ</option>
                             <option value="夜のみ">夜のみ</option>
@@ -401,10 +698,27 @@
 
         <footer class="mt-8 p-4 bg-white sticky bottom-0 border-t shadow-lg">
             <div class="flex justify-center gap-4">
-                <button onclick="saveData()" class="btn-primary">保存</button>
+                <button onclick="showPreview()" class="btn-secondary">プレビュー</button>
+                <button onclick="printPDF()" class="btn-primary">PDF印刷</button>
+                <button onclick="saveData()" class="btn-secondary">保存</button>
             </div>
         </footer>
     </div>
+
+    <!-- Preview Modal -->
+    <div id="preview_modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; overflow: auto;">
+        <div style="max-width: 1300px; margin: 20px auto; background: #ffffff; padding: 24px; border-radius: 12px; position: relative; box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);">
+            <button onclick="closePreview()" style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; font-weight: bold;">×</button>
+            <h2 style="text-align: center; margin-bottom: 20px; color: #1D4ED8;">印刷プレビュー</h2>
+            <div id="preview_content" style="border: 1px solid #cbd5f5; border-radius: 8px; min-height: 400px;"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="printPDF()" class="btn-primary">このまま印刷</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Container -->
+    <div id="print_container" style="display: none;"></div>
 
     <script>
         // Configuración global
@@ -983,41 +1297,430 @@
             }
         }
 
+        // Add job entry
+        function addJobEntry() {
+            const tbody = document.getElementById('job_history');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="month" class="job-start"></td>
+                <td><input type="month" class="job-end"></td>
+                <td><input type="text" class="job-hakenmoto"></td>
+                <td><input type="text" class="job-hakensaki"></td>
+                <td><input type="text" class="job-content"></td>
+                <td><input type="text" class="job-reason"></td>
+                <td><button type="button" class="delete-btn" onclick="this.closest('tr').remove()">×</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // Add family entry
+        function addFamilyEntry() {
+            const tbody = document.getElementById('family_members');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="fam-name"></td>
+                <td><input type="text" class="fam-relation"></td>
+                <td><input type="date" class="fam-birthday"></td>
+                <td><input type="number" class="fam-age"></td>
+                <td><input type="text" class="fam-residence"></td>
+                <td><select class="fam-dependent"><option value="有">有</option><option value="無">無</option></select></td>
+                <td><button type="button" class="delete-btn" onclick="this.closest('tr').remove()">×</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
         // Collect all form data
         function collectFormData() {
+            const jobHistory = [];
+            document.querySelectorAll('#job_history tr').forEach(tr => {
+                jobHistory.push({
+                    start: tr.querySelector('.job-start')?.value || '',
+                    end: tr.querySelector('.job-end')?.value || '',
+                    hakenmoto: tr.querySelector('.job-hakenmoto')?.value || '',
+                    hakensaki: tr.querySelector('.job-hakensaki')?.value || '',
+                    content: tr.querySelector('.job-content')?.value || '',
+                    reason: tr.querySelector('.job-reason')?.value || ''
+                });
+            });
+
+            const familyMembers = [];
+            document.querySelectorAll('#family_members tr').forEach(tr => {
+                familyMembers.push({
+                    name: tr.querySelector('.fam-name')?.value || '',
+                    relation: tr.querySelector('.fam-relation')?.value || '',
+                    birthday: tr.querySelector('.fam-birthday')?.value || '',
+                    age: tr.querySelector('.fam-age')?.value || '',
+                    residence: tr.querySelector('.fam-residence')?.value || '',
+                    dependent: tr.querySelector('.fam-dependent')?.value || ''
+                });
+            });
+
+            const experiences = [];
+            document.querySelectorAll('input[name="exp"]:checked').forEach(cb => {
+                experiences.push(cb.value);
+            });
+
             return {
-                full_name_kanji: document.getElementById('name_kanji').value,
-                full_name_kana: document.getElementById('name_furigana').value,
-                date_of_birth: document.getElementById('birthday').value || null,
+                photo: document.getElementById('photo_preview').src,
+                name_kanji: document.getElementById('name_kanji').value,
+                name_furigana: document.getElementById('name_furigana').value,
+                applicant_id: document.getElementById('applicant_id').value,
+                birthday: document.getElementById('birthday').value,
+                age: document.getElementById('age').value,
                 gender: document.getElementById('gender').value,
                 nationality: document.getElementById('nationality').value,
                 postal_code: document.getElementById('postal_code').value,
-                current_address: document.getElementById('address').value,
+                address: document.getElementById('address').value,
                 mobile: document.getElementById('mobile').value,
                 phone: document.getElementById('phone').value,
-                emergency_contact_name: document.getElementById('emergency_name').value,
-                emergency_contact_relation: document.getElementById('emergency_relation').value,
-                emergency_contact_phone: document.getElementById('emergency_phone').value,
-                residence_status: document.getElementById('visa_type').value,
-                residence_expiry: document.getElementById('visa_expiry').value || null,
-                residence_card_number: document.getElementById('residence_card_no').value,
-                passport_number: document.getElementById('passport_no').value,
-                passport_expiry: document.getElementById('passport_expiry').value || null,
-                license_number: document.getElementById('license_no').value,
-                license_expiry: document.getElementById('license_expiry').value || null,
-                car_ownership: document.querySelector('input[name="car_owner"]:checked')?.value || '',
-                voluntary_insurance: document.querySelector('input[name="insurance"]:checked')?.value || '',
+                emergency_name: document.getElementById('emergency_name').value,
+                emergency_relation: document.getElementById('emergency_relation').value,
+                emergency_phone: document.getElementById('emergency_phone').value,
+                ocr_note: document.getElementById('ocr_note').value,
+                visa_type: document.getElementById('visa_type').value,
+                visa_period: document.getElementById('visa_period').value,
+                visa_expiry: document.getElementById('visa_expiry').value,
+                residence_card_no: document.getElementById('residence_card_no').value,
+                passport_no: document.getElementById('passport_no').value,
+                passport_expiry: document.getElementById('passport_expiry').value,
+                license_no: document.getElementById('license_no').value,
+                license_type: document.getElementById('license_type').value,
+                license_expiry: document.getElementById('license_expiry').value,
+                car_owner: document.querySelector('input[name="car_owner"]:checked')?.value || '',
+                insurance: document.querySelector('input[name="insurance"]:checked')?.value || '',
+                speak_level: document.getElementById('speak_level').value,
+                listen_level: document.getElementById('listen_level').value,
+                kanji_level: document.getElementById('kanji_level').value,
+                kana_read: document.getElementById('kana_read').value,
+                kana_write: document.getElementById('kana_write').value,
+                education: document.getElementById('education').value,
                 major: document.getElementById('major').value,
-                commute_time_oneway: document.getElementById('commute_time').value ? parseInt(document.getElementById('commute_time').value) : null
+                height: document.getElementById('height').value,
+                weight: document.getElementById('weight').value,
+                uniform_size: document.getElementById('uniform_size').value,
+                waist: document.getElementById('waist').value,
+                shoe_size: document.getElementById('shoe_size').value,
+                blood_type: document.getElementById('blood_type').value,
+                vision_right: document.getElementById('vision_right').value,
+                vision_left: document.getElementById('vision_left').value,
+                glasses: document.querySelector('input[name="glasses"]:checked')?.value || '',
+                dominant_arm: document.querySelector('input[name="dominant_arm"]:checked')?.value || '',
+                allergy: document.querySelector('input[name="allergy"]:checked')?.value || '',
+                safety_shoes: document.querySelector('input[name="safety_shoes"]:checked')?.value || '',
+                vaccine: document.querySelector('input[name="vaccine"]:checked')?.value || '',
+                qualifications: document.getElementById('qualifications').value,
+                experiences: experiences,
+                jobHistory: jobHistory,
+                familyMembers: familyMembers,
+                commute_time: document.getElementById('commute_time').value,
+                lunch_pref: document.getElementById('lunch_pref').value,
+                // Nuevos campos extraídos por OCR
+                region: document.getElementById('region').value,
+                permission_date: document.getElementById('permission_date').value,
+                issue_date: document.getElementById('issue_date').value,
+                authorized_activity: document.getElementById('authorized_activity').value,
+                employer_restriction: document.getElementById('employer_restriction').value
+            };
+        }
+
+        // Utility functions for formatting
+        function escapeHtml(value) {
+            if (value === null || value === undefined) return '';
+            return value
+                .toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatValue(value, fallback = '―') {
+            const normalized = (value ?? '').toString().trim();
+            return normalized ? escapeHtml(normalized) : fallback;
+        }
+
+        function formatValueWithUnit(value, unit, fallback = '―') {
+            const normalized = (value ?? '').toString().trim();
+            return normalized ? `${escapeHtml(normalized)}${unit}` : fallback;
+        }
+
+        function formatMultiline(value, fallback = '―') {
+            const normalized = (value ?? '').toString().trim();
+            return normalized ? escapeHtml(value).replace(/\n/g, '<br>') : fallback;
+        }
+
+        function formatPeriod(start, end) {
+            const s = (start ?? '').toString().trim();
+            const e = (end ?? '').toString().trim();
+            if (!s && !e) return '―';
+            if (!s) return escapeHtml(e);
+            if (!e) return escapeHtml(s);
+            return `${escapeHtml(s)} 〜 ${escapeHtml(e)}`;
+        }
+
+        // Show Preview
+        function showPreview() {
+            const modal = document.getElementById('preview_modal');
+            const content = document.getElementById('preview_content');
+
+            content.innerHTML = generatePrintHTML(false);
+            modal.style.display = 'block';
+        }
+
+        function closePreview() {
+            document.getElementById('preview_modal').style.display = 'none';
+        }
+
+        // Print with PDF
+        function printPDF() {
+            const printContainer = document.getElementById('print_container');
+            printContainer.innerHTML = generatePrintHTML(true);
+
+            // Usamos setTimeout para asegurar que el contenido se ha renderizado antes de imprimir
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+
+        function generatePrintHTML(forPrint) {
+            const data = collectFormData();
+            const jobRows = (data.jobHistory || [])
+                .filter(job => [job.start, job.end, job.hakenmoto, job.hakensaki, job.content, job.reason].some(field => (field ?? '').toString().trim()))
+                .map(job => `
+                    <tr>
+                        <td>${formatPeriod(job.start, job.end)}</td>
+                        <td>${formatValue(job.hakenmoto)}</td>
+                        <td>${formatValue(job.hakensaki)}</td>
+                        <td>${formatValue(job.content)}</td>
+                        <td>${formatValue(job.reason)}</td>
+                    </tr>
+                `)
+                .join('');
+
+            const familyRows = (data.familyMembers || [])
+                .filter(member => [member.name, member.relation, member.birthday, member.age, member.residence, member.dependent].some(field => (field ?? '').toString().trim()))
+                .map(member => `
+                    <tr>
+                        <td>${formatValue(member.name)}</td>
+                        <td>${formatValue(member.relation)}</td>
+                        <td>${formatValue(member.birthday)}</td>
+                        <td>${formatValue(member.age)}</td>
+                        <td>${formatValue(member.residence)}</td>
+                        <td>${formatValue(member.dependent)}</td>
+                    </tr>
+                `)
+                .join('');
+
+            const experiencesTags = (data.experiences || []).length
+                ? data.experiences.map(exp => `<span class="print-tag">${formatValue(exp)}</span>`).join('')
+                : '<span class="print-muted">経験作業の登録はありません</span>';
+
+            const photoContent = data.photo && data.photo !== window.location.href
+                ? `<img src="${escapeHtml(data.photo)}" alt="写真">`
+                : '<span class="print-muted">写真未登録</span>';
+
+            return `
+                <div class="print-page">
+                    <div class="print-header">
+                        <div class="print-photo-frame">${photoContent}</div>
+                        <table class="print-basic-table">
+                            <tr>
+                                <th>氏名</th>
+                                <td>${formatValue(data.name_kanji)}</td>
+                                <th>フリガナ</th>
+                                <td>${formatValue(data.name_furigana)}</td>
+                            </tr>
+                            <tr>
+                                <th>生年月日</th>
+                                <td>${formatValue(data.birthday)}</td>
+                                <th>年齢</th>
+                                <td>${formatValueWithUnit(data.age, '歳')}</td>
+                            </tr>
+                            <tr>
+                                <th>性別</th>
+                                <td>${formatValue(data.gender)}</td>
+                                <th>国籍</th>
+                                <td>${formatValue(data.nationality)}</td>
+                            </tr>
+                            <tr>
+                                <th>ID</th>
+                                <td>${formatValue(data.applicant_id)}</td>
+                                <th>居住地域</th>
+                                <td>${formatValue(data.region)}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="print-grid">
+                        <section class="print-section">
+                            <div class="print-section-title">住所・連絡先</div>
+                            <table class="print-table">
+                                <tr><th>郵便番号</th><td>${formatValue(data.postal_code)}</td></tr>
+                                <tr><th>住所</th><td>${formatValue(data.address)}</td></tr>
+                                <tr><th>携帯電話</th><td>${formatValue(data.mobile)}</td></tr>
+                                <tr><th>電話番号</th><td>${formatValue(data.phone)}</td></tr>
+                                <tr>
+                                    <th>緊急連絡先</th>
+                                    <td>
+                                        <span class="block">${formatValue(data.emergency_name)}</span>
+                                        <span class="block print-muted">続柄: ${formatValue(data.emergency_relation)}</span>
+                                        <span class="block print-muted">電話: ${formatValue(data.emergency_phone)}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </section>
+
+                        <section class="print-section">
+                            <div class="print-section-title">在留・身分証情報</div>
+                            <table class="print-table">
+                                <tr><th>在留資格</th><td>${formatValue(data.visa_type)}</td></tr>
+                                <tr><th>在留期間</th><td>${formatValue(data.visa_period)}</td></tr>
+                                <tr><th>在留期間満了日</th><td>${formatValue(data.visa_expiry)}</td></tr>
+                                <tr><th>資格外活動許可日</th><td>${formatValue(data.permission_date)}</td></tr>
+                                <tr><th>交付日</th><td>${formatValue(data.issue_date)}</td></tr>
+                                <tr><th>資格外活動</th><td>${formatMultiline(data.authorized_activity)}</td></tr>
+                                <tr><th>就労制限</th><td>${formatMultiline(data.employer_restriction)}</td></tr>
+                                <tr><th>在留カード番号</th><td>${formatValue(data.residence_card_no)}</td></tr>
+                                <tr><th>パスポート番号</th><td>${formatValue(data.passport_no)}</td></tr>
+                                <tr><th>パスポート有効期限</th><td>${formatValue(data.passport_expiry)}</td></tr>
+                            </table>
+                        </section>
+
+                        <section class="print-section">
+                            <div class="print-section-title">運転・保険</div>
+                            <table class="print-table">
+                                <tr><th>運転免許証番号</th><td>${formatValue(data.license_no)}</td></tr>
+                                <tr><th>免許種類</th><td>${formatValue(data.license_type)}</td></tr>
+                                <tr><th>免許有効期限</th><td>${formatValue(data.license_expiry)}</td></tr>
+                                <tr><th>車両所持</th><td>${formatValue(data.car_owner)}</td></tr>
+                                <tr><th>自動車保険</th><td>${formatValue(data.insurance)}</td></tr>
+                            </table>
+                        </section>
+
+                        <section class="print-section">
+                            <div class="print-section-title">日本語力・学歴</div>
+                            <table class="print-table">
+                                <tr><th>会話</th><td>${formatValue(data.speak_level)}</td></tr>
+                                <tr><th>聴解</th><td>${formatValue(data.listen_level)}</td></tr>
+                                <tr><th>漢字</th><td>${formatValue(data.kanji_level)}</td></tr>
+                                <tr><th>カナ読</th><td>${formatValue(data.kana_read)}</td></tr>
+                                <tr><th>カナ書</th><td>${formatValue(data.kana_write)}</td></tr>
+                                <tr><th>最終学歴</th><td>${formatValue(data.education)}</td></tr>
+                                <tr><th>専攻</th><td>${formatValue(data.major)}</td></tr>
+                            </table>
+                        </section>
+
+                        <section class="print-section">
+                            <div class="print-section-title">身体情報・健康状態</div>
+                            <table class="print-table">
+                                <tr><th>身長</th><td>${formatValueWithUnit(data.height, 'cm')}</td></tr>
+                                <tr><th>体重</th><td>${formatValueWithUnit(data.weight, 'kg')}</td></tr>
+                                <tr><th>服サイズ</th><td>${formatValue(data.uniform_size)}</td></tr>
+                                <tr><th>ウエスト</th><td>${formatValueWithUnit(data.waist, 'cm')}</td></tr>
+                                <tr><th>靴サイズ</th><td>${formatValueWithUnit(data.shoe_size, 'cm')}</td></tr>
+                                <tr><th>血液型</th><td>${formatValue(data.blood_type)}</td></tr>
+                                <tr><th>視力(右)</th><td>${formatValue(data.vision_right)}</td></tr>
+                                <tr><th>視力(左)</th><td>${formatValue(data.vision_left)}</td></tr>
+                                <tr><th>メガネ</th><td>${formatValue(data.glasses)}</td></tr>
+                                <tr><th>利き腕</th><td>${formatValue(data.dominant_arm)}</td></tr>
+                                <tr><th>アレルギー</th><td>${formatValue(data.allergy)}</td></tr>
+                                <tr><th>安全靴</th><td>${formatValue(data.safety_shoes)}</td></tr>
+                                <tr><th>ワクチン</th><td>${formatValue(data.vaccine)}</td></tr>
+                            </table>
+                        </section>
+
+                        <section class="print-section">
+                            <div class="print-section-title">勤務条件・備考</div>
+                            <table class="print-table">
+                                <tr><th>通勤片道時間</th><td>${formatValueWithUnit(data.commute_time, '分')}</td></tr>
+                                <tr><th>お弁当/食堂</th><td>${formatValue(data.lunch_pref)}</td></tr>
+                                <tr><th>特記事項</th><td>${formatMultiline(data.ocr_note)}</td></tr>
+                            </table>
+                        </section>
+
+                        <section class="print-section full-width">
+                            <div class="print-section-title">保有資格・経験作業</div>
+                            <table class="print-table" style="margin-bottom: 4mm;">
+                                <tr><th>有資格</th><td>${formatMultiline(data.qualifications)}</td></tr>
+                            </table>
+                            <div class="print-tags">${experiencesTags}</div>
+                        </section>
+                    </div>
+
+                    <section class="print-section" style="margin-bottom: 8mm;">
+                        <div class="print-section-title">職務経歴</div>
+                        <table class="print-table">
+                            <thead>
+                                <tr>
+                                    <th>期間</th>
+                                    <th>派遣元</th>
+                                    <th>派遣先</th>
+                                    <th>作業内容</th>
+                                    <th>退社理由</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${jobRows || '<tr><td colspan="5" style="text-align: center;" class="print-muted">職務経歴の登録はありません</td></tr>'}
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="print-section">
+                        <div class="print-section-title">家族構成</div>
+                        <table class="print-table">
+                            <thead>
+                                <tr>
+                                    <th>氏名</th>
+                                    <th>続柄</th>
+                                    <th>生年月日</th>
+                                    <th>年齢</th>
+                                    <th>居住</th>
+                                    <th>扶養</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${familyRows || '<tr><td colspan="6" style="text-align: center;" class="print-muted">家族構成の登録はありません</td></tr>'}
+                            </tbody>
+                        </table>
+                    </section>
+                </div>
+            `;
+        }
+
+        // Map form data to backend schema
+        function mapFormDataToBackendSchema(formData) {
+            return {
+                full_name_kanji: formData.name_kanji,
+                full_name_kana: formData.name_furigana,
+                date_of_birth: formData.birthday || null,
+                gender: formData.gender,
+                nationality: formData.nationality,
+                postal_code: formData.postal_code,
+                current_address: formData.address,
+                mobile: formData.mobile,
+                phone: formData.phone,
+                residence_status: formData.visa_type,
+                residence_expiry: formData.visa_expiry || null,
+                residence_card_number: formData.residence_card_no,
+                passport_number: formData.passport_no,
+                passport_expiry: formData.passport_expiry || null,
+                license_number: formData.license_no,
+                license_expiry: formData.license_expiry || null,
+                car_ownership: formData.car_owner,
+                voluntary_insurance: formData.insurance,
+                major: formData.major,
+                commute_time_oneway: formData.commute_time ? parseInt(formData.commute_time) : null
             };
         }
 
         // Save Data
         async function saveData() {
             const formData = collectFormData();
+            const mappedData = mapFormDataToBackendSchema(formData);
 
             // Validar campos obligatorios
-            if (!formData.full_name_kanji) {
+            if (!mappedData.full_name_kanji) {
                 alert('氏名は必須項目です。(Name is required)');
                 return;
             }
@@ -1030,7 +1733,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
                     },
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify(mappedData),
                 });
 
                 const result = await response.json();
@@ -1038,7 +1741,7 @@
                 if (response.ok) {
                     alert('¡Datos guardados en la base de datos correctamente!');
                     console.log(result);
-                    
+
                     // Limpiar formulario después de guardar
                     document.getElementById('name_kanji').value = '';
                     document.getElementById('name_furigana').value = '';
@@ -1046,7 +1749,7 @@
                     document.getElementById('age').value = '';
                     document.getElementById('address').value = '';
                     // Limpiar otros campos si es necesario
-                    
+
                     // Resetear estado de OCR
                     ocrCompleted = false;
                     document.getElementById('zairyu_card').disabled = false;

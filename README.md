@@ -68,6 +68,7 @@ JPUNS-Claude-3.0/
 │   ├── README.md           # Este archivo
 │   ├── GUIA_RAPIDA.md      # Comandos esenciales
 │   ├── GUIA-BASE-DATOS.md  # Guía completa de base de datos
+│   ├── DATABASE-MANAGEMENT.md  # Guía de módulos de base de datos
 │   ├── CHANGELOG.md        # Historial de cambios
 │   ├── SOLUCION_LOGIN_DEFINITIVA.md    # Guía de solución login
 │   └── SOLUCION_ERROR_EMPLEADOS.md     # Guía de solución empleados
@@ -82,6 +83,15 @@ JPUNS-Claude-3.0/
 │   └── backend/
 │       ├── app/
 │       │   ├── api/        # Endpoints REST
+│       │   │   ├── auth.py     # Autenticación
+│       │   │   ├── candidates.py # Gestión de candidatos
+│       │   │   ├── employees.py  # Gestión de empleados
+│       │   │   ├── factories.py  # Gestión de fábricas
+│       │   │   ├── timer_cards.py # Control de asistencia
+│       │   │   ├── salary.py      # Gestión de salarios
+│       │   │   ├── requests.py    # Gestión de solicitudes
+│       │   │   ├── database.py    # Gestión de base de datos
+│       │   │   └── ...           # Otros endpoints
 │       │   ├── core/       # Configuración y utilidades
 │       │   ├── models/     # Modelos SQLAlchemy
 │       │   ├── schemas/    # Schemas Pydantic
@@ -92,7 +102,30 @@ JPUNS-Claude-3.0/
 │   └── frontend/
 │       ├── src/
 │       │   ├── components/ # Componentes React
+│       │   │   ├── Layout.tsx     # Layout principal
+│       │   │   ├── ProtectedRoute.tsx # Rutas protegidas
+│       │   │   ├── ThemeSwitcher.tsx # Cambio de tema
+│       │   │   └── ...           # Otros componentes
 │       │   ├── pages/      # Páginas principales
+│       │   │   ├── Dashboard.tsx   # Dashboard principal
+│       │   │   ├── Candidates.tsx  # Gestión de candidatos
+│       │   │   ├── Employees.tsx   # Gestión de empleados
+│       │   │   ├── Factories.tsx   # Gestión de fábricas
+│       │   │   ├── TimerCards.tsx  # Control de asistencia
+│       │   │   ├── Salary.tsx      # Gestión de salarios
+│       │   │   ├── Requests.tsx    # Gestión de solicitudes
+│       │   │   ├── DateBaseJP.tsx  # Gestión integrada de BD
+│       │   │   ├── AdminerDBJP.tsx # Interfaz Adminer
+│       │   │   └── ...           # Otras páginas
+│       │   ├── styles/     # Estilos CSS
+│       │   │   ├── Layout.css      # Estilos del layout
+│       │   │   ├── DateBaseJP.css  # Estilos DateBaseJP
+│       │   │   ├── AdminerDBJP.css # Estilos AdminerDBJP
+│       │   │   └── ...           # Otros estilos
+│       │   ├── context/    # Contextos React
+│       │   │   ├── PageVisibilityContext.tsx # Visibilidad de páginas
+│       │   │   ├── ThemeContext.tsx # Tema de la aplicación
+│       │   │   └── ...           # Otros contextos
 │       │   ├── services/   # Servicios API
 │       │   └── utils/      # Utilidades
 │       └── package.json
@@ -155,6 +188,7 @@ Use esto solo si:
 | **Frontend** | http://localhost:3000 | Interfaz de usuario principal |
 | **Backend API** | http://localhost:8000 | API REST |
 | **API Docs** | http://localhost:8000/api/docs | Documentación Swagger |
+| **Adminer** | http://localhost:8080 | Administración de base de datos |
 | **Base de Datos** | localhost:5432 | PostgreSQL (acceso interno) |
 
 ---
@@ -195,10 +229,23 @@ Use esto solo si:
 - Regreso temporal (一時帰国)
 - Renuncias
 
+### 🗄️ Gestión de Base de Datos
+- **DateBaseJP**: Gestión integrada de tablas
+  - Visualización y edición de datos
+  - Importación/Exportación CSV y Excel
+  - Búsqueda en tiempo real
+  - Paginación de resultados
+- **Adminer DBJP**: Administración avanzada
+  - Interfaz completa de Adminer
+  - Ejecución de consultas SQL personalizadas
+  - Gestión de estructura de base de datos
+  - Funciones de backup/restore
+
 ### 🔐 Sistema de Usuarios
 - Roles jerárquicos (SUPER_ADMIN, ADMIN, COORDINATOR, etc.)
 - Autenticación JWT
 - Permisos por rol
+- Visibilidad configurable de páginas
 
 ---
 
@@ -379,8 +426,15 @@ Para problemas o preguntas:
 
 Ver [CHANGELOG.md](CHANGELOG.md) para historial detallado de cambios.
 
-**Última actualización:** 2025-10-12
-**Versión:** 3.0
+### v3.1 - 2025-10-14
+- ✨ **Nuevos módulos de gestión de base de datos**
+  - DateBaseJP: Gestión integrada de tablas con UI moderna
+  - Adminer DBJP: Interfaz completa para Adminer
+- 🎨 Mejoras de estilos CSS sin errores
+- 📚 Nueva documentación para módulos de base de datos
+
+**Última actualización:** 2025-10-14
+**Versión:** 3.1
 
 ---
 

@@ -18,6 +18,8 @@ import TimerCards from './pages/TimerCards';
 import Salary from './pages/Salary';
 import Requests from './pages/Requests';
 import ImportData from './pages/ImportData';
+import DateBaseJP from './pages/DateBaseJP';
+import AdminerDBJP from './pages/AdminerDBJP';
 import RirekishoPrintView from './pages/RirekishoPrintView';
 import RirekishoPrintViewJPModif from './pages/RirekishoPrintViewJPModif';
 import RirekishoPrintViewJPModif2 from './pages/RirekishoPrintViewJPModif2';
@@ -225,6 +227,22 @@ function App() {
                 element={(
                   <VisibilityGuard pageKey="importData">
                     <ImportData />
+                  </VisibilityGuard>
+                )}
+              />
+              <Route
+                path="database"
+                element={(
+                  <VisibilityGuard pageKey="database">
+                    <DateBaseJP />
+                  </VisibilityGuard>
+                )}
+              />
+              <Route
+                path="adminer"
+                element={(
+                  <VisibilityGuard pageKey="adminer">
+                    <AdminerDBJP />
                   </VisibilityGuard>
                 )}
               />

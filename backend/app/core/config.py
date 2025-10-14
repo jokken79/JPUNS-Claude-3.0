@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://uns_admin:password@db:5432/uns_claudejp")
+    DATABASE_URL: str
 
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
@@ -113,6 +113,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignorar variables de entorno adicionales
 
 
 settings = Settings()

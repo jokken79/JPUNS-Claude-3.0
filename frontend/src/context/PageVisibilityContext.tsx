@@ -10,7 +10,9 @@ export type PageKey =
   | 'factories'
   | 'timerCards'
   | 'salary'
-  | 'requests';
+  | 'requests'
+  | 'database'
+  | 'adminer';
 
 type PageVisibilityState = Record<PageKey, boolean>;
 
@@ -34,6 +36,8 @@ const DEFAULT_VISIBILITY: PageVisibilityState = {
   timerCards: true,
   salary: true,
   requests: true,
+  database: true,
+  adminer: true,
 };
 
 const PageVisibilityContext = createContext<PageVisibilityContextValue | undefined>(

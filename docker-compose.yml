@@ -152,6 +152,19 @@ services:
     stdin_open: true
     tty: true
 
+  # Database Management (Adminer)
+  adminer:
+    image: adminer
+    container_name: uns-claudejp-adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - uns-network
+
 volumes:
   postgres_data:
     driver: local

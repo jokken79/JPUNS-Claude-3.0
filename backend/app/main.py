@@ -118,6 +118,7 @@ from app.api import (  # noqa: E402  pylint: disable=wrong-import-position
     candidates,
     azure_ocr,
     dashboard,
+    database,
     employees,
     factories,
     import_export,
@@ -132,6 +133,7 @@ from app.api import (  # noqa: E402  pylint: disable=wrong-import-position
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(candidates.router, prefix="/api/candidates", tags=["Candidates"])
 app.include_router(azure_ocr.router, prefix="/api/azure-ocr", tags=["Azure OCR"])
+app.include_router(database.router, prefix="/api/database", tags=["Database Management"])
 app.include_router(employees.router, prefix="/api/employees", tags=["Employees"])
 app.include_router(factories.router, prefix="/api/factories", tags=["Factories"])
 app.include_router(timer_cards.router, prefix="/api/timer-cards", tags=["Timer Cards"])
