@@ -21,6 +21,31 @@ const CandidateForm: React.FC = () => {
   const [isNew, setIsNew] = useState(true);
   const [showOCRUploader, setShowOCRUploader] = useState(false);
 
+  const sanitizeCandidateData = (data: CandidateFormData) => {
+    const sanitized: CandidateFormData = {};
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (value === undefined || value === null) {
+        return;
+      }
+
+      if (typeof value === 'string') {
+        const trimmedValue = value.trim();
+
+        if (trimmedValue === '') {
+          return;
+        }
+
+        sanitized[key] = trimmedValue;
+        return;
+      }
+
+      sanitized[key] = value;
+    });
+
+    return sanitized;
+  };
+
   useEffect(() => {
     if (id) {
       setIsNew(false);
@@ -58,13 +83,15 @@ const CandidateForm: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
+      const payload = sanitizeCandidateData(candidate);
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(candidate),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
