@@ -1,0 +1,30 @@
+{
+  "git.enabled": true,
+  "git.path": "C:\\Program Files\\Git\\cmd\\git.exe",
+  "git.autoRepositoryDetection": true,
+  "git.autoStash": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "git.autofetch": true,
+  "git.showPushSuccessNotification": true,
+  "git.allowForcePush": false,
+  "git.allowNoVerifyCommit": false,
+  "git.alwaysSignOff": false,
+  "git.decorations.enabled": true,
+  "git.ignoredRepositories": [],
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell"
+    },
+    "Command Prompt": {
+      "path": "cmd.exe",
+      "icon": "terminal-cmd"
+    },
+    "Git Bash": {
+      "path": "C:\\Program Files\\Git\\bin\\bash.exe",
+      "icon": "terminal"
+    }
+  }
+}
