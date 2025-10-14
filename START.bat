@@ -11,23 +11,38 @@ echo ║                     INICIAR APLICACIÓN                          ║
 echo ╚════════════════════════════════════════════════════════════════╝
 echo.
 
-:: Detectar Docker Compose
+:: Detectar Docker con múltiples rutas
+set "DOCKER_CMD="
 set "DOCKER_COMPOSE_CMD="
-docker compose version >nul 2>&1
+
+:: Probar Docker en PATH
+docker --version >nul 2>&1
 if %errorlevel% EQU 0 (
-    set "DOCKER_COMPOSE_CMD=docker compose"
+    set "DOCKER_CMD=docker"
 ) else (
-    docker-compose version >nul 2>&1
-    if %errorlevel% EQU 0 (
-        set "DOCKER_COMPOSE_CMD=docker-compose"
+    :: Probar ruta completa
+    if exist "C:\Program Files\Docker\Docker\resources\bin\docker.exe" (
+        set "DOCKER_CMD="C:\Program Files\Docker\Docker\resources\bin\docker.exe""
     ) else (
-        echo ❌ Docker Compose no está instalado
+        echo ❌ Docker no encontrado
         echo.
         echo Por favor instala Docker Desktop desde:
         echo https://www.docker.com/products/docker-desktop
+        echo.
+        echo O ejecuta VERIFICAR-DOCKER.bat para más información
         pause
         exit /b 1
     )
+)
+
+:: Configurar Docker Compose
+%DOCKER_CMD% compose version >nul 2>&1
+if %errorlevel% EQU 0 (
+    set "DOCKER_COMPOSE_CMD=%DOCKER_CMD% compose"
+) else (
+    echo ❌ Docker Compose no está disponible
+    pause
+    exit /b 1
 )
 
 :: Verificar si ya está corriendo

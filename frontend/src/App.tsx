@@ -6,8 +6,9 @@ import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Candidates from './pages/Candidates';
+import CandidatesList from './pages/CandidatesList';
 import PendingApproval from './pages/PendingApproval';
-import CandidateForm from './pages/CandidateForm';
+import CandidateEdit from './pages/CandidateEdit';
 import Employees from './pages/Employees';
 import EmployeesExtended from './pages/EmployeesExtended';
 import EmployeeDetail from './pages/EmployeeDetail';
@@ -90,10 +91,18 @@ function App() {
                 )}
               />
               <Route
-                path="candidates/new"
+                path="candidates/list"
                 element={(
                   <VisibilityGuard pageKey="candidates">
-                    <CandidateForm />
+                    <CandidatesList />
+                  </VisibilityGuard>
+                )}
+              />
+              <Route
+                path="candidates/:id/edit"
+                element={(
+                  <VisibilityGuard pageKey="candidates">
+                    <CandidateEdit />
                   </VisibilityGuard>
                 )}
               />
@@ -101,7 +110,7 @@ function App() {
                 path="candidates/:id"
                 element={(
                   <VisibilityGuard pageKey="candidates">
-                    <CandidateForm />
+                    <CandidateEdit />
                   </VisibilityGuard>
                 )}
               />

@@ -1,0 +1,17 @@
+{
+  "command": "npm run dev",
+  "serverUrl": "http://localhost:3000/candidates",
+  "authenticateProxy": false,
+  "commitMode": "commits",
+  "framework": "react",
+  "typescript": true,
+  "tailwind": true,
+  "components": {
+    "path": "./frontend/src/components",
+    "extension": ".tsx"
+  },
+  "pages": {
+    "path": "./frontend/src/pages",
+    "extension": ".tsx"
+  }
+}
