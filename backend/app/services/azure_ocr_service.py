@@ -101,6 +101,11 @@ class AzureOCRService:
 
             # Parse structured data based on document type
             parsed_data = self._parse_response(raw_text, document_type)
+            
+            # Extract photo from document
+            photo_data = self._extract_photo_from_document(image_data, document_type)
+            if photo_data:
+                parsed_data['photo'] = photo_data
 
             return {
                 "success": True,
@@ -132,73 +137,95 @@ class AzureOCRService:
     def _parse_zairyu_card(self, text: str) -> Dict[str, Any]:
         """Parse Zairyu Card (Residence Card) data"""
         import re
-
         result = {}
         lines = text.split('\n')
+        lines = [line.strip() for line in lines if line.strip()]
+        
+        # --- DATE PARSING ---
+        date_patterns = [
+            r'(\d{4})[年/\-\.](\d{1,2})[月/\-\.](\d{1,2})日?',
+            r'(\d{4})[/\-\.](\d{1,2})[/\-\.](\d{1,2})'
+        ]
+        all_dates = []
+        for line in lines:
+            for pattern in date_patterns:
+                for match in re.finditer(pattern, line):
+                    try:
+                        year, month, day = [int(g) for g in match.groups()]
+                        if 1 <= month <= 12 and 1 <= day <= 31:
+                            all_dates.append(f"{year}-{month:02d}-{day:02d}")
+                    except (ValueError, IndexError):
+                        continue
+        
+        if all_dates:
+            result['birthday'] = all_dates[0]
+            if len(all_dates) > 1:
+                result['zairyu_expire_date'] = all_dates[-1]
 
+        # --- MAIN PARSING LOOP ---
         for i, line in enumerate(lines):
-            line_clean = line.strip()
-
-            # Extract name (氏名)
-            if '氏名' in line or 'Name' in line:
-                # Try next line or same line
+            # Name
+            if 'name_kanji' not in result and any(keyword in line for keyword in ['氏名', 'Name']):
                 name_match = re.search(r'氏名[：:\s]*(.+)', line)
-                if name_match:
+                if name_match and len(name_match.group(1).strip()) > 1:
                     result['name_kanji'] = name_match.group(1).strip()
-                elif i + 1 < len(lines):
-                    result['name_kanji'] = lines[i + 1].strip()
+                elif i + 1 < len(lines) and not any(k in lines[i+1] for k in ['生年月日', '国籍', '性別']):
+                    result['name_kanji'] = lines[i+1].strip()
 
-            # Extract date of birth (生年月日)
-            if '生年月日' in line or 'Date of birth' in line:
-                date_pattern = r'(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})'
-                match = re.search(date_pattern, line)
-                if match:
-                    year, month, day = match.groups()
-                    result['birthday'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+            # Gender
+            if 'gender' not in result and any(keyword in line for keyword in ['性別', 'Gender']):
+                if '男' in line or 'Male' in line: result['gender'] = '男性'
+                elif '女' in line or 'Female' in line: result['gender'] = '女性'
 
-            # Extract nationality (国籍・地域)
-            if '国籍' in line or 'Nationality' in line:
+            # Nationality
+            if 'nationality' not in result and any(keyword in line for keyword in ['国籍', 'Nationality', '地域']):
                 nat_match = re.search(r'国籍[・：:\s]*(.+)', line)
-                if nat_match:
-                    result['nationality'] = nat_match.group(1).strip()
+                if nat_match and nat_match.group(1).strip():
+                    result['nationality'] = self._normalize_nationality(nat_match.group(1).strip())
 
-            # Extract residence status (在留資格)
-            if '在留資格' in line or 'Status of residence' in line:
+            # Address
+            if 'address' not in result and any(keyword in line for keyword in ['住居地', 'Address']):
+                addr_match = re.search(r'住居地[：:\s]*(.+)', line)
+                if addr_match and addr_match.group(1).strip():
+                    result['address'] = addr_match.group(1).strip()
+                elif i + 1 < len(lines):
+                    result['address'] = lines[i+1].strip()
+
+            # Visa Status
+            if 'visa_status' not in result and any(keyword in line for keyword in ['在留資格', 'Status of residence']):
                 status_match = re.search(r'在留資格[：:\s]*(.+)', line)
-                if status_match:
+                if status_match and status_match.group(1).strip():
                     result['visa_status'] = status_match.group(1).strip()
+                elif i + 1 < len(lines):
+                     result['visa_status'] = lines[i+1].strip()
 
-            # Extract expiry date (有効期限)
-            if '有効期限' in line or '満了日' in line or 'expiry' in line.lower():
-                date_pattern = r'(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})'
-                match = re.search(date_pattern, line)
-                if match:
-                    year, month, day = match.groups()
-                    result['zairyu_expire_date'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
-
-            # Extract card number (カード番号)
-            if 'カード番号' in line or 'Card No' in line or 'Number' in line:
-                # Residence card numbers: AB1234567890
-                number_pattern = r'([A-Z]{2}\d{10,})'
-                match = re.search(number_pattern, line)
+            # Card Number
+            if 'zairyu_card_number' not in result and any(keyword in line for keyword in ['カード番号', '番号', 'Card No']):
+                pattern = r'([A-Z]{2}\s?\d{8}\s?[A-Z]{2})'
+                match = re.search(pattern, line.replace(' ', ''))
                 if match:
                     result['zairyu_card_number'] = match.group(1)
 
-            # Extract address (住居地)
-            if '住居地' in line or 'Address' in line:
-                addr_match = re.search(r'住居地[：:\s]*(.+)', line)
-                if addr_match:
-                    result['address'] = addr_match.group(1).strip()
-                elif i + 1 < len(lines):
-                    # Address might be on next lines
-                    address_parts = []
-                    for j in range(i + 1, min(i + 4, len(lines))):
-                        if lines[j].strip() and not any(key in lines[j] for key in ['氏名', '生年月日', '国籍']):
-                            address_parts.append(lines[j].strip())
-                        else:
-                            break
-                    if address_parts:
-                        result['address'] = ' '.join(address_parts)
+        # --- FALLBACKS & POST-PROCESSING ---
+
+        # Nationality Fallback
+        if 'nationality' not in result:
+            normalized_nat = self._normalize_nationality(text)
+            if normalized_nat != text: result['nationality'] = normalized_nat
+        
+        # Address Component Parsing
+        if 'address' in result:
+            address_components = self._parse_japanese_address(result['address'])
+            result.update(address_components)
+            main_address_parts = [
+                address_components.get('prefecture', ''),
+                address_components.get('city', ''),
+                address_components.get('ward', ''),
+                address_components.get('district', '')
+            ]
+            # Overwrite full address with just the main parts, before banchi
+            if any(main_address_parts):
+                 result['address'] = ''.join(main_address_parts).strip()
 
         return result
 
@@ -279,6 +306,318 @@ class AzureOCRService:
                     result['license_issue_date'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
 
         return result
+
+    def _convert_to_katakana(self, text: str) -> str:
+        """Convert text to Katakana using basic patterns"""
+        import re
+        
+        # Extended conversion patterns for Vietnamese names and common Japanese names
+        # This is a simplified version - in production you'd use a proper library
+        conversion_map = {
+            # Vietnamese names (from your examples)
+            'MAI': 'マイ',
+            'TU': 'トゥ',
+            'ANH': 'アン',
+            'NGUYEN': 'グエン',
+            'VAN': 'ヴァン',
+            'QUY': 'クイ',
+            'VU': 'ヴゥ',
+            'THI': 'ティ',
+            'SAU': 'サウ',
+            'TUAN': 'トゥアン',
+            'VIET': 'ヴィエット',
+            'CUONG': 'クオン',
+            'LUU': 'ルウ',
+            'PHUONG': 'フォン',
+            'HOAI': 'ホアイ',
+            
+            # Common Vietnamese name components
+            'MINH': 'ミン',
+            'THANH': 'タン',
+            'HUY': 'フイ',
+            'DUC': 'ドゥック',
+            'HOANG': 'ホアン',
+            'TRUNG': 'チュン',
+            'AN': 'アン',
+            'BINH': 'ビン',
+            'NAM': 'ナム',
+            'NU': 'ヌ',
+            'HA': 'ハ',
+            'LINH': 'リン',
+            'GIANG': 'ジャン',
+            'QUYNH': 'クイン',
+            'TRANG': 'チャン',
+            'PHUC': 'フック',
+            'SON': 'ソン',
+            'LAM': 'ラム',
+            'TAM': 'タム',
+            'NGOC': 'ゴック',
+            'THAO': 'タオ',
+            'THUY': 'トゥイ',
+            'MY': 'ミー',
+            'LY': 'リー',
+            
+            # Common Japanese names
+            'YAMADA': 'ヤマダ',
+            'TARO': 'タロウ',
+            'HANAKO': 'ハナコ',
+            'SUZUKI': 'スズキ',
+            'SATOU': 'サトウ',
+            'TANAKA': 'タナカ',
+            'WATANABE': 'ワタナベ',
+            'ITO': 'イトウ',
+            'YAMAMOTO': 'ヤマモト',
+            'NAKAMURA': 'ナカムラ',
+            'KOBAYASHI': 'コバヤシ',
+            'SAITOU': 'サイトウ',
+            'KATO': 'カトウ',
+            'YOSHIDA': 'ヨシダ',
+            'YAMASHITA': 'ヤマシタ',
+            'HASHIMOTO': 'ハシモト',
+            'FUJITA': 'フジタ',
+            'OGAWA': 'オガワ',
+            'MORI': 'モリ',
+            'ISHIDA': 'イシダ',
+            'MATSUMOTO': 'マツモト',
+            'HAYASHI': 'ハヤシ',
+            'KIMURA': 'キムラ',
+            
+            # Special character combinations
+            'PH': 'フ',
+            'TH': 'ト',
+            'QU': 'ク',
+            'NG': 'ング',
+            'NH': 'ニ',
+            'CH': 'チ'
+        }
+        
+        # Try to convert known patterns
+        result = text.upper()  # Convert to uppercase for matching
+        
+        # Handle special Vietnamese combinations first
+        for romaji, katakana in conversion_map.items():
+            result = result.replace(romaji, katakana)
+        
+        # Handle individual character conversions for remaining text
+        char_map = {
+            'A': 'ア', 'B': 'ビ', 'C': 'シ', 'D': 'ド', 'E': 'エ',
+            'F': 'フ', 'G': 'グ', 'H': 'ハ', 'I': 'イ', 'J': 'ジ',
+            'K': 'ク', 'L': 'ル', 'M': 'ム', 'N': 'ン', 'O': 'オ',
+            'P': 'プ', 'Q': 'ク', 'R': 'ル', 'S': 'ス', 'T': 'ト',
+            'U': 'ウ', 'V': 'ヴ', 'W': 'ワ', 'X': 'クス', 'Y': 'ヤ',
+            'Z': 'ズ'
+        }
+        
+        # Convert any remaining characters
+        final_result = ''
+        for char in result:
+            if char in char_map:
+                final_result += char_map[char]
+            else:
+                final_result += char
+        
+        return final_result
+
+    def _normalize_nationality(self, nationality: str) -> str:
+        """Normalize nationality to Japanese format"""
+        nationality_mapping = {
+            'VIETNAM': 'ベトナム',
+            'VIET NAM': 'ベトナム',
+            'Vietnam': 'ベトナム',
+            'Viet Nam': 'ベトナム',
+            'vietnan': 'ベトナム',  # Common OCR error
+            'VIETNAN': 'ベトナム',
+            'PHILIPPINES': 'フィリピン',
+            'Philippines': 'フィリピン',
+            'CHINA': '中国',
+            'China': '中国',
+            'KOREA': '韓国',
+            'Korea': '韓国',
+            'BRAZIL': 'ブラジル',
+            'Brazil': 'ブラジル',
+            'PERU': 'ペルー',
+            'Peru': 'ペルー',
+            'INDONESIA': 'インドネシア',
+            'Indonesia': 'インドネシア',
+            'THAILAND': 'タイ',
+            'Thailand': 'タイ',
+            'MYANMAR': 'ミャンマー',
+            'Myanmar': 'ミャンマー',
+            'CAMBODIA': 'カンボジア',
+            'Cambodia': 'カンボジア',
+            'NEPAL': 'ネパール',
+            'Nepal': 'ネパール',
+            'MONGOLIA': 'モンゴル',
+            'Mongolia': 'モンゴル',
+            'BANGLADESH': 'バングラデシュ',
+            'Bangladesh': 'バングラデシュ',
+            'SRI LANKA': 'スリランカ',
+            'Sri Lanka': 'スリランカ'
+        }
+        
+        # Try exact match first
+        normalized = nationality_mapping.get(nationality.upper())
+        if normalized:
+            return normalized
+        
+        # Try partial match
+        for key, value in nationality_mapping.items():
+            if key.lower() in nationality.lower() or nationality.lower() in key.lower():
+                return value
+        
+        # Return original if no mapping found
+        return nationality
+
+    def _parse_japanese_address(self, address: str) -> Dict[str, str]:
+        """Parse Japanese address into components"""
+        import re
+        
+        result = {
+            'postal_code': '',
+            'prefecture': '',
+            'city': '',
+            'ward': '',
+            'district': '',
+            'banchi': '',
+            'building': ''
+        }
+        
+        # Extract postal code if present
+        postal_match = re.search(r'(\d{3}-\d{4})', address)
+        if postal_match:
+            result['postal_code'] = postal_match.group(1)
+        
+        # Extract prefecture
+        prefectures = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+                      '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+                      '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
+                      '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
+                      '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+                      '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
+                      '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+        
+        for prefecture in prefectures:
+            if prefecture in address:
+                result['prefecture'] = prefecture
+                # Remove prefecture from address for further processing
+                address = address.replace(prefecture, '', 1)
+                break
+        
+        # Split remaining address by common delimiters
+        # Pattern: 市区町村 + 番地 + 建物名
+        # Example: 名古屋市東区徳川2-18-18
+        #          city  ward district banchi
+        
+        # Match patterns like "名古屋市東区徳川"
+        city_ward_pattern = r'([^0-9]+[市区町村])([^0-9]+[区郡]?[^0-9]*)([^0-9]+)?'
+        match = re.search(city_ward_pattern, address)
+        if match:
+            result['city'] = match.group(1)
+            result['ward'] = match.group(2) if match.group(2) else ''
+            result['district'] = match.group(3) if match.group(3) else ''
+        
+        # Extract banchi (番地) - numbers after district
+        # Handle patterns like "908番地1の2" or "908-1-2"
+        banchi_patterns = [
+            r'(\d+)番地(\d+)の(\d+)',  # 908番地1の2
+            r'(\d+)[−\-\s](\d+)[−\-\s](\d+)',  # 908-1-2
+            r'(\d+)[−\-\s]*(\d+)[−\-\s]*(\d*)',  # More flexible
+        ]
+        
+        for pattern in banchi_patterns:
+            banchi_match = re.search(pattern, address)
+            if banchi_match:
+                groups = banchi_match.groups()
+                # Format as XXX番地XのX
+                if groups[2]:  # Third group exists
+                    result['banchi'] = f"{groups[0]}番地{groups[1]}の{groups[2]}"
+                else:
+                    result['banchi'] = f"{groups[0]}番地{groups[1]}"
+                logger.info(f"OCR - Parsed banchi: {result['banchi']}")
+                break
+        
+        # Extract building name (if any) - usually after numbers
+        # Look for patterns like "メゾン徳川101号室"
+        building_patterns = [
+            r'(\d+[−\-\s]*\d+[−\-\s]*\d*\s*)([^0-9]+号室[^0-9]*)',  # Building with room number
+            r'(\d+[−\-\s]*\d+[−\-\s]*\d*\s*)([^0-9]+)',  # Building name after numbers
+        ]
+        
+        for pattern in building_patterns:
+            building_match = re.search(pattern, address)
+            if building_match:
+                building_parts = building_match.groups()
+                if len(building_parts) > 1:
+                    building_name = building_parts[1].strip()
+                    if building_name != "番地":
+                        result['building'] = building_name
+                        logger.info(f"OCR - Parsed building: {result['building']}")
+                        break
+        
+        return result
+
+    def _extract_photo_from_document(self, image_data: bytes, document_type: str) -> Optional[str]:
+        """Extract photo from document image"""
+        try:
+            # Import required libraries
+            import base64
+            from io import BytesIO
+            from PIL import Image
+            import numpy as np
+            
+            # Convert bytes to PIL Image
+            image = Image.open(BytesIO(image_data))
+            
+            # Convert to numpy array for processing
+            img_array = np.array(image)
+            
+            # Try to detect and crop the photo region
+            # For Zairyu Card, photo is usually on the right side
+            height, width = img_array.shape[:2]
+            
+            if document_type == "zairyu_card":
+                # For residence cards, photo is typically on the right 1/3 of the image
+                # Adjusted to include more area so face is not cut
+                photo_region = img_array[int(height*0.05):int(height*0.65),
+                                       int(width*0.60):int(width*0.98)]
+                
+                # Convert back to PIL Image
+                photo_image = Image.fromarray(photo_region)
+                
+                # Convert to base64
+                buffered = BytesIO()
+                photo_image.save(buffered, format="JPEG", quality=85)
+                base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+                
+                # Add data URI prefix
+                photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
+                
+                logger.info(f"OCR - Photo cropped from {document_type}")
+                return photo_data_uri
+            else:
+                # For other documents, return full image for now
+                base64_image = base64.b64encode(image_data).decode('utf-8')
+                photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
+                logger.info(f"OCR - Full photo returned from {document_type}")
+                return photo_data_uri
+            
+        except ImportError:
+            # If PIL is not available, return full image
+            import base64
+            from io import BytesIO
+            base64_image = base64.b64encode(image_data).decode('utf-8')
+            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
+            logger.warning(f"OCR - PIL not available, returning full image from {document_type}")
+            return photo_data_uri
+            
+        except Exception as e:
+            logger.error(f"Error extracting photo: {e}")
+            # Fallback: return full image
+            import base64
+            from io import BytesIO
+            base64_image = base64.b64encode(image_data).decode('utf-8')
+            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
+            return photo_data_uri
 
 
 # Create singleton instance

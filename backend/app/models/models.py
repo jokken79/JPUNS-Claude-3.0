@@ -102,7 +102,9 @@ class Candidate(Base):
     # 住所情報 (Address Information)
     postal_code = Column(String(10))  # 郵便番号
     current_address = Column(Text)  # 現住所
+    address = Column(Text)  # 住所 (principal)
     address_banchi = Column(String(100))  # 番地
+    address_building = Column(String(100))  # アパートなど
     building_name = Column(String(100))  # 物件名
     registered_address = Column(Text)  # 登録住所
 

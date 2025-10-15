@@ -61,6 +61,7 @@ Si necesitas algo más visual, puedes usar editores online:
 Para tablas complejas como la tuya, te recomiendo este flujo de trabajo:
 
 1. **Abre el archivo HTML en VS Code**
+   - `frontend/public/templates/rirekisho.html`
 
 2. **Dibuja primero en papel o en una herramienta de diseño:**
    - Sketch
@@ -89,6 +90,7 @@ Para tablas complejas como la tuya, te recomiendo este flujo de trabajo:
    - Auto Rename Tag (renombra automáticamente etiquetas de cierre)
 
 ## 🎨 Ejemplo Práctico: Cómo Mover una Columna
+
 Si quieres mover, por ejemplo, la foto de un lado a otro:
 
 **Antes (Foto a la derecha):**
@@ -116,6 +118,7 @@ Si quieres mover, por ejemplo, la foto de un lado a otro:
 Solo cortas y pegas el bloque `<td>` de la foto antes de los demás.
 
 ## 📋 Mi Recomendación Personal
+
 Para tu caso específico con rirekisho.html:
 1. Usa Live Server + Chrome DevTools (opción 1)
 2. Llena el formulario con datos de prueba primero
@@ -126,6 +129,7 @@ Para tu caso específico con rirekisho.html:
 7. Pega en VS Code en la función `generatePrintHTML()`
 
 ## 🚀 ¿Quieres que te ayude a mover algo específico?
+
 Dime qué columnas o secciones quieres reordenar y te muestro exactamente qué código copiar/pegar. Por ejemplo:
 - "Quiero la foto a la izquierda en lugar de la derecha"
 - "Quiero que 'Familia' aparezca antes de 'Experiencia Laboral'"

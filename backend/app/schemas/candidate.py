@@ -27,7 +27,9 @@ class CandidateBase(BaseModel):
     # 住所情報 (Address Information)
     postal_code: Optional[str] = None
     current_address: Optional[str] = None
+    address: Optional[str] = None
     address_banchi: Optional[str] = None
+    address_building: Optional[str] = None
     building_name: Optional[str] = None
     registered_address: Optional[str] = None
 

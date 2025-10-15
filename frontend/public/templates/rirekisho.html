@@ -36,8 +36,8 @@
             padding-left: 1rem;
         }
         #photo_preview_container {
-            width: 150px; 
-            height: 180px;
+            width: 225px; 
+            height: 270px;
             border: 2px dashed #d1d5db;
             border-radius: 8px;
             display: flex;
@@ -316,10 +316,6 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
-                                <label class="block text-sm font-medium mb-1">ID</label>
-                                <input type="text" id="applicant_id" readonly class="bg-gray-100">
-                            </div>
-                            <div>
                                 <label class="block text-sm font-medium mb-1">備考（OCR結果）</label>
                                 <input type="text" id="ocr_note" readonly class="bg-gray-100 text-sm text-gray-600">
                             </div>
@@ -327,7 +323,7 @@
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                                 <label>生年月日</label>
-                                <input type="date" id="birthday">
+                                <input type="text" id="birthday">
                                 <small class="text-gray-500">形式: 年-月-日</small>
                             </div>
                             <div><label>年齢</label><input type="number" id="age" min="18" max="80" readonly class="bg-gray-100"></div>
@@ -356,8 +352,21 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <div><label>郵便番号</label><input type="text" id="postal_code" placeholder="000-0000"></div>
-                    <div class="md:col-span-3"><label>住所</label><input type="text" id="address"></div>
+                    <div><label>郵便番号</label><input type="text" id="postal_code" placeholder="000-0000" onchange="lookupAddress()"></div>
+                    <div class="md:col-span-3">
+                        <label>住所</label>
+                        <input type="text" id="address" placeholder="OCRまたは郵便番号から自動入力、または手動入力" onchange="extractPostalCode()">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="md:col-span-1">
+                        <label>住所(番地など)</label>
+                        <input type="text" id="address_banchi" placeholder="例: 2-18-18">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label>住所(アパートなど)</label>
+                        <input type="text" id="address_building" placeholder="例: メゾン徳川101号室">
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -700,10 +709,10 @@
         };
         
         // Initialize - ID comenzando desde UNS-2000
-        document.getElementById('applicant_id').value = `UNS-2000`;
         let ocrCompleted = false;
         let wanakanaErrorLogged = false;
         let currentOCREndpoint = 0;
+        let nextCandidateId = 2000; // Start from 2000
         
         // Comprobar estado del servidor al cargar la página
         window.addEventListener('DOMContentLoaded', () => {
@@ -1054,14 +1063,41 @@
 
                 // Rellenar campos del formulario
                 document.getElementById('name_kanji').value = textData.name_kanji || textData.name || '';
-                document.getElementById('birthday').value = textData.birthday || '';
-                document.getElementById('address').value = textData.address || '';
                 
-                // Calcular edad automáticamente desde la fecha de nacimiento
+                // Rellenar fecha de nacimiento si está disponible
                 if (textData.birthday) {
-                    const calculatedAge = calculateAge(textData.birthday);
-                    document.getElementById('age').value = calculatedAge;
-                    console.log(`Edad calculada: ${calculatedAge} años desde ${formatDateJapanese(textData.birthday)}`);
+                    let dateForCalc = '';
+                    // Unificar el formato de fecha a YYYY-MM-DD
+                    if (textData.birthday.includes('年') && textData.birthday.includes('月')) {
+                        const match = textData.birthday.match(/(\d{4}s*)年(s*\d{1,2}s*)月(s*\d{1,2}s*)日/);
+                        if (match) {
+                            dateForCalc = `${match[1].trim()}-${match[2].trim().padStart(2, '0')}-${match[3].trim().padStart(2, '0')}`;
+                        }
+                    } else {
+                        // Asumir formato ISO 8601 o similar
+                        const date = new Date(textData.birthday);
+                        if (!isNaN(date)) {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            dateForCalc = `${year}-${month}-${day}`;
+                        }
+                    }
+
+                    if (dateForCalc) {
+                        // Formatear para visualización en el campo de texto
+                        const [year, month, day] = dateForCalc.split('-');
+                        if (year && month && day) {
+                            document.getElementById('birthday').value = `${year}年${month}月${day}日`;
+                        }
+
+                        // Calcular edad
+                        const calculatedAge = calculateAge(dateForCalc);
+                        document.getElementById('age').value = calculatedAge;
+                        logDebug(`Fecha de nacimiento establecida: ${dateForCalc}, Edad: ${calculatedAge}`);
+                    } else {
+                        logDebug(`Formato de fecha de nacimiento no reconocido: ${textData.birthday}`);
+                    }
                 }
                 
                 // Rellenar género si está disponible
@@ -1072,44 +1108,96 @@
                 // Rellenar nacionalidad si está disponible
                 if (textData.nationality) {
                     const nationalitySelect = document.getElementById('nationality');
-                    const options = nationalitySelect.options;
-                    let found = false;
-                    
-                    for (let i = 0; i < options.length; i++) {
-                        if (options[i].text.includes(textData.nationality) ||
-                            options[i].value.includes(textData.nationality)) {
-                            nationalitySelect.value = options[i].value;
-                            found = true;
-                            break;
+                    const ocrNat = textData.nationality.toLowerCase();
+                    let finalNatValue = '';
+
+                    // Aggressive mapping for common countries
+                    if (ocrNat.includes('viet') || ocrNat.includes('ベトナム')) {
+                        finalNatValue = 'ベトナム';
+                    } else if (ocrNat.includes('brazil') || ocrNat.includes('ブラジル')) {
+                        finalNatValue = 'ブラジル';
+                    } else if (ocrNat.includes('peru') || ocrNat.includes('ペルー')) {
+                        finalNatValue = 'ペルー';
+                    } else if (ocrNat.includes('indonesia') || ocrNat.includes('インドネシア')) {
+                        finalNatValue = 'インドネシア';
+                    }
+
+                    if (finalNatValue) {
+                        nationalitySelect.value = finalNatValue;
+                    } else {
+                        // Original fallback logic if no mapping is found
+                        const options = nationalitySelect.options;
+                        let found = false;
+                        for (let i = 0; i < options.length; i++) {
+                            if (options[i].text.toLowerCase().includes(ocrNat)) {
+                                nationalitySelect.value = options[i].value;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            nationalitySelect.value = 'その他';
                         }
                     }
-                    
-                    if (!found) {
-                        nationalitySelect.value = 'その他';
+                }
+                
+                // Rellenar dirección completa si está disponible
+                if (textData.address) {
+                    // Limpiar dirección de información de visa
+                    let cleanAddress = textData.address;
+                    if (cleanAddress.includes('在留資格')) {
+                        cleanAddress = cleanAddress.split('在留資格')[0].trim();
                     }
+                    if (cleanAddress.includes('技術') && cleanAddress.includes('人文')) {
+                        // Si contiene información de visa, no usar como dirección
+                        console.log('OCR - Detected visa info in address, skipping');
+                    } else {
+                        document.getElementById('address').value = cleanAddress;
+                    }
+                }
+                
+                // Rellenar componentes de dirección si están disponibles
+                if (textData.prefecture) {
+                    // La dirección principal ya incluye prefectura
+                }
+                
+                if (textData.banchi) {
+                    document.getElementById('address_banchi').value = textData.banchi;
+                }
+                
+                if (textData.building) {
+                    document.getElementById('address_building').value = textData.building;
+                }
+                
+                // Si tenemos el código postal pero no la dirección, buscarla
+                if (textData.postal_code && !textData.address) {
+                    document.getElementById('postal_code').value = textData.postal_code;
+                    setTimeout(() => lookupAddress(), 500);
                 }
                 
                 // Rellenar código postal si está disponible
                 const postalField = document.getElementById('postal_code');
                 if (postalField && textData.postal_code) {
                     postalField.value = textData.postal_code;
+                    // Auto-lookup address when postal code is detected
+                    setTimeout(() => lookupAddress(), 500);
                 }
                 
                 // Rellenar número de tarjeta de residencia si está disponible
-                if (textData.card_number) {
-                    document.getElementById('residence_card_no').value = textData.card_number;
+                if (textData.zairyu_card_number) {
+                    document.getElementById('residence_card_no').value = textData.zairyu_card_number;
                 }
                 
                 // Rellenar tipo de visa si está disponible
-                if (textData.visa_type) {
-                    document.getElementById('visa_type').value = textData.visa_type;
+                if (textData.visa_status) {
+                    document.getElementById('visa_type').value = textData.visa_status;
                 }
                 
                 // Rellenar fecha de vencimiento de visa si está disponible
-                if (textData.visa_expiry) {
+                if (textData.zairyu_expire_date) {
                     const visaExpiryField = document.getElementById('visa_expiry');
                     if (visaExpiryField) {
-                        visaExpiryField.value = textData.visa_expiry;
+                        visaExpiryField.value = textData.zairyu_expire_date;
                     }
                 }
 
@@ -1131,14 +1219,16 @@
 
                 // Auto-rellenar フリガナ (Furigana) desde OCR
                 if (type === 'zairyu') {
-                    autoUpdateFurigana(textData.name_kanji || textData.name || '');
-
+                    // Use the katakana from OCR if available
                     if (textData.name_kana) {
                         document.getElementById('name_furigana').value = textData.name_kana;
                         const ocrNoteField = document.getElementById('ocr_note');
                         if (ocrNoteField) {
                             ocrNoteField.value = 'OCRからカナを取得してフリガナに設定しました\n' + (ocrNoteField.value || '');
                         }
+                    } else {
+                        // Fallback to auto-conversion
+                        autoUpdateFurigana(textData.name_kanji || textData.name || '');
                     }
                 }
 
@@ -1328,17 +1418,39 @@
                 experiences.push(cb.value);
             });
 
+            // Generate unique ID for this candidate
+            const applicantId = `UNS-${nextCandidateId}`;
+            nextCandidateId++;
+            
+            // Combine address components
+            const fullAddress = [
+                document.getElementById('address').value,
+                document.getElementById('address_banchi').value,
+                document.getElementById('address_building').value
+            ].filter(part => part && part.trim() !== '').join(' ');
+            
             return {
                 photo: document.getElementById('photo_preview').src,
                 name_kanji: document.getElementById('name_kanji').value,
                 name_furigana: document.getElementById('name_furigana').value,
-                applicant_id: document.getElementById('applicant_id').value,
-                birthday: document.getElementById('birthday').value,
+                applicant_id: applicantId,
+                birthday: (() => {
+                    const birthdayVal = document.getElementById('birthday').value;
+                    if (birthdayVal.includes('年')) {
+                        const match = birthdayVal.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+                        if (match) {
+                            return `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
+                        }
+                    }
+                    return birthdayVal; // Return as-is if not in Japanese format
+                })(),
                 age: document.getElementById('age').value,
                 gender: document.getElementById('gender').value,
                 nationality: document.getElementById('nationality').value,
                 postal_code: document.getElementById('postal_code').value,
-                address: document.getElementById('address').value,
+                address: fullAddress,
+                address_banchi: document.getElementById('address_banchi').value,
+                address_building: document.getElementById('address_building').value,
                 mobile: document.getElementById('mobile').value,
                 phone: document.getElementById('phone').value,
                 emergency_name: document.getElementById('emergency_name').value,
@@ -1837,6 +1949,61 @@
                 console.error('Fetch error:', error);
             }
         }
-    </script>
+    // Function to lookup address from postal code
+    async function lookupAddress() {
+        const postalCode = document.getElementById('postal_code').value.trim();
+        if (!postalCode || !/^\d{3}-\d{4}$/.test(postalCode)) {
+            return;
+        }
+        
+        try {
+            // Use Japan Post API to lookup address
+            const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode.replace('-', '')}`);
+            const data = await response.json();
+            
+            if (data.results && data.results.length > 0) {
+                const result = data.results[0];
+                const fullAddress = `${result.address1}${result.address2}${result.address3 || ''}`;
+                
+                // Fill the main address field
+                document.getElementById('address').value = fullAddress;
+                
+                // Clear the detailed address fields for manual input
+                document.getElementById('address_banchi').value = '';
+                document.getElementById('address_building').value = '';
+                
+                // Show success message
+                const ocrNoteField = document.getElementById('ocr_note');
+                if (ocrNoteField) {
+                    ocrNoteField.value = `郵便番号から住所を自動入力しました: ${fullAddress}`;
+                }
+            }
+        } catch (error) {
+            console.error('Error looking up address:', error);
+            const ocrNoteField = document.getElementById('ocr_note');
+            if (ocrNoteField) {
+                ocrNoteField.value = '住所検索エラー: 手動で入力してください';
+            }
+        }
+    }
+    
+    // Function to extract face from document and set as photo
+    async function extractFaceFromDocument(imageData) {
+        try {
+            // This would require a face detection API
+            // For now, we'll just use the full image as a placeholder
+            // In a real implementation, you'd use a service like:
+            // - Azure Face API
+            // - AWS Rekognition
+            // - Google Cloud Vision API
+            
+            // For demo purposes, we'll just show the image
+            return imageData;
+        } catch (error) {
+            console.error('Error extracting face:', error);
+            return null;
+        }
+    }
+</script>
 </body>
 </html>
