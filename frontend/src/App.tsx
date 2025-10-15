@@ -22,6 +22,7 @@ import AdminerDBJP from './pages/AdminerDBJP';
 import RirekishoPrintView from './pages/RirekishoPrintView';
 import RirekishoPrintViewJPModif from './pages/RirekishoPrintViewJPModif';
 import RirekishoPrintViewJPModif2 from './pages/RirekishoPrintViewJPModif2';
+import VisaComplianceDashboard from './pages/VisaComplianceDashboard';
 
 // Components
 import Layout from './components/Layout';
@@ -82,6 +83,14 @@ function App() {
                 element={
                   <VisibilityGuard pageKey="dashboard">
                     <Dashboard />
+                  </VisibilityGuard>
+                }
+              />
+              <Route
+                path="visa-compliance"
+                element={
+                  <VisibilityGuard pageKey="visaCompliance">
+                    <VisaComplianceDashboard />
                   </VisibilityGuard>
                 }
               />

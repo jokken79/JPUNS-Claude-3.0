@@ -14,7 +14,8 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowUpTrayIcon,
-  ServerIcon
+  ServerIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import { PageKey, usePageVisibility } from '../context/PageVisibilityContext';
 import '../styles/Layout.css';
@@ -34,6 +35,7 @@ const Layout: React.FC = () => {
 
   const navigation: NavigationItem[] = [
     { key: 'dashboard', name: 'ダッシュボード', href: '/dashboard', icon: HomeIcon },
+    { key: 'visaCompliance', name: 'ビザ・コンプライアンス', href: '/visa-compliance', icon: ShieldCheckIcon },
     { key: 'candidates', name: '履歴書管理', href: '/candidates', icon: UserPlusIcon },
     { key: 'pendingApproval', name: '承認待ち', href: '/pending-approval', icon: ClockIcon },
     { key: 'employees', name: '従業員管理', href: '/employees', icon: UserGroupIcon },
