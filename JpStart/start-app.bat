@@ -1,12 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
 
-title UNS-ClaudeJP 2.0 - Starting...
+title UNS-ClaudeJP 3.1 - Starting...
 
 echo.
 echo ==================================================
-echo          UNS-ClaudeJP 2.0 - Quick Start          
-echo      人材管理インテリジェンスプラットフォーム       
+echo          UNS-ClaudeJP 3.1 - Quick Start
+echo      人材管理インテリジェンスプラットフォーム
 echo ==================================================
 echo.
 
@@ -56,17 +56,58 @@ echo       [OK] Directories ready
 
 :: Start services
 echo [5/5] Starting services...
-docker compose up -d --build
+
+:: First, stop any existing services to ensure clean start
+echo Stopping existing services...
+docker-compose stop 2>nul
+
+:: Remove containers to ensure clean state
+echo Cleaning up containers...
+docker-compose rm -f 2>nul
+
+:: Start services without rebuild to preserve database
+echo Starting services...
+docker-compose up -d
 if errorlevel 1 (
     echo ERROR: Failed to start services
     echo Checking logs...
-    docker compose logs
+    docker-compose logs
     pause
     exit /b 1
 )
 
+:: Wait for database to be ready
+echo Waiting for database to be ready...
+set /a db_count=0
+:DB_WAIT_LOOP
+if %db_count% GEQ 10 goto DB_TIMEOUT
+ping 127.0.0.1 -n 3 >nul
+set /a db_count+=1
+
+:: Check if database is accepting connections
+docker-compose exec -T db pg_isready -U uns_admin -d uns_claudejp >nul 2>&1
+if errorlevel 1 (
+    echo [%db_count%/10] Database starting...
+    goto DB_WAIT_LOOP
+)
+
+echo [OK] Database is ready!
+
+:: Initialize database if needed
+echo Initializing database...
+docker-compose exec -T backend python scripts/create_admin_user.py >nul 2>&1
+docker-compose exec -T backend python scripts/import_data.py >nul 2>&1
+echo [OK] Database initialized!
+
+goto CONTINUE_START
+
+:DB_TIMEOUT
+echo [WARNING] Database initialization timeout, continuing anyway...
+
+:CONTINUE_START
+
 echo.
-echo SUCCESS: UNS-ClaudeJP 2.0 is starting!
+echo SUCCESS: UNS-ClaudeJP 3.1 is starting!
 echo.
 echo URLs:
 echo   Frontend:  http://localhost:3000
@@ -75,7 +116,7 @@ echo   API Docs:  http://localhost:8000/api/docs
 echo.
 echo Default credentials:
 echo   Username: admin
-echo   Password: admin123
+echo   Password: 57UD10R
 echo.
 
 echo Waiting for services to be ready...

@@ -55,9 +55,17 @@ EJECUTAR PRIMERO (instalación nueva)
 - **Propósito**: Instalación completa del sistema desde cero
 - **Cuándo ejecutar**: Primera vez que se instala el sistema
 
-#### 2. **JpStart/start-app.bat** ▶️
+#### 2. **START-UNICO.bat** 🚀
 ```
-EJECUTAR DESPUÉS DE INSTALAR
+EJECUTAR DESPUÉS DE INSTALAR (RECOMENDADO)
+```
+- **Propósito**: Iniciar todos los servicios con inicialización completa de base de datos
+- **Cuándo ejecutar**: Después de la instalación para iniciar el sistema correctamente
+- **Ventaja**: Inicia todo en un solo paso sin necesidad de scripts adicionales
+
+#### 3. **JpStart/start-app.bat** ▶️
+```
+EJECUTAR DESPUÉS DE INSTALAR (ALTERNATIVA)
 ```
 - **Propósito**: Iniciar todos los servicios del sistema
 - **Cuándo ejecutar**: Después de la instalación para iniciar el sistema

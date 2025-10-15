@@ -27,7 +27,12 @@
    - Instalación completa del sistema
    - Configuración inicial
 
-2. **[JpStart/start-app.bat](JpStart/start-app.bat)** ▶️
+2. **[START-UNICO.bat](START-UNICO.bat)** 🚀
+   - Iniciar todos los servicios con inicialización completa
+   - Solución única para problemas de base de datos
+   - Verificar funcionamiento
+
+3. **[JpStart/start-app.bat](JpStart/start-app.bat)** ▶️
    - Iniciar todos los servicios
    - Verificar funcionamiento
 

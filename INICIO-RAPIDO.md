@@ -39,7 +39,7 @@ LEER TERCERO ⬇️
 1️⃣ LEER: LEEME_PRIMERO.txt
 2️⃣ LEER: README.md
 3️⃣ EJECUTAR: INSTALAR.bat
-4️⃣ EJECUTAR: JpStart/start-app.bat
+4️⃣ EJECUTAR: START-UNICO.bat (recomendado) o JpStart/start-app.bat
 ```
 [**Ver guía completa**](GUIA-USO-ARCHIVOS.md#instalación-inicial)
 
@@ -66,7 +66,8 @@ LEER TERCERO ⬇️
 | Acción | Archivo .BAT | Cuándo usar |
 |--------|--------------|-------------|
 | **Instalar todo** | [INSTALAR.bat](INSTALAR.bat) | Primera vez |
-| **Iniciar sistema** | [JpStart/start-app.bat](JpStart/start-app.bat) | Para trabajar |
+| **Iniciar sistema** | [START-UNICO.bat](START-UNICO.bat) | **RECOMENDADO** (único script) |
+| **Iniciar sistema** | [JpStart/start-app.bat](JpStart/start-app.bat) | Alternativa |
 | **Actualizar** | [ACTUALIZAR-DEPENDENCIAS.bat](ACTUALIZAR-DEPENDENCIAS.bat) | Mantenimiento |
 | **Diagnosticar** | [JpStart/diagnose-issues.bat](JpStart/diagnose-issues.bat) | Cuando hay errores |
 | **Ver logs** | [LOGS.bat](LOGS.bat) | Para investigar |
@@ -130,8 +131,8 @@ SOLUCIÓN:
 1. LEER: LEEME_PRIMERO.txt (30 segundos)
 2. LEER: README.md (1 minuto)
 3. EJECUTAR: INSTALAR.bat (3-5 minutos)
-4. EJECUTAR: JpStart/start-app.bat (30 segundos)
-5. LISTO: 🎉 Sistema funcionando
+4. EJECUTAR: START-UNICO.bat (30 segundos)
+5. LISTO: 🎉 Sistema funcionando con base de datos lista
 ```
 
 ### 🔄 Mantenimiento Mensual
