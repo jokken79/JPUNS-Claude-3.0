@@ -93,28 +93,51 @@ const CandidateForm: React.FC = () => {
     // Mapping from OCR data to candidate fields
     const mappedData: Partial<CandidateFormData> = {};
 
-    // Direct mappings
-    if (ocrData.full_name_kanji) mappedData.full_name_kanji = ocrData.full_name_kanji;
-    if (ocrData.full_name_kana) mappedData.full_name_kana = ocrData.full_name_kana;
-    if (ocrData.address) mappedData.current_address = ocrData.address;
-    if (ocrData.phone) mappedData.phone = ocrData.phone;
+    // Names (support multiple aliases coming from OCR service)
+    const fullNameKanji = ocrData.full_name_kanji || ocrData.name_kanji;
+    const fullNameKana = ocrData.full_name_kana || ocrData.name_kana;
+    const fullNameRoman = ocrData.full_name_roman || ocrData.name_roman;
+    if (fullNameKanji) mappedData.full_name_kanji = fullNameKanji;
+    if (fullNameKana) mappedData.full_name_kana = fullNameKana;
+    if (fullNameRoman) mappedData.full_name_roman = fullNameRoman;
+
+    // Contact info
+    if (ocrData.phone || ocrData.phone_number) mappedData.phone = ocrData.phone || ocrData.phone_number;
     if (ocrData.email) mappedData.email = ocrData.email;
 
-    // Special mappings
-    if (ocrData.date_of_birth) {
-      // Format date if needed (assuming ISO format from OCR)
-      mappedData.date_of_birth = ocrData.date_of_birth;
+    // Address data
+    const detectedAddress = ocrData.current_address || ocrData.address || ocrData.registered_address;
+    if (detectedAddress) {
+      mappedData.current_address = detectedAddress;
+      mappedData.address = detectedAddress;
     }
+    if (ocrData.postal_code) mappedData.postal_code = ocrData.postal_code;
+    if (ocrData.address_banchi || ocrData.banchi) mappedData.address_banchi = ocrData.address_banchi || ocrData.banchi;
+    if (ocrData.address_building || ocrData.building)
+      mappedData.address_building = ocrData.address_building || ocrData.building;
+
+    // Special mappings
+    const dateOfBirth = ocrData.date_of_birth || ocrData.birthday;
+    if (dateOfBirth) mappedData.date_of_birth = dateOfBirth;
+    if (ocrData.gender) mappedData.gender = ocrData.gender;
 
     // Mapping for Zairyu Card specific fields
     if (ocrData.nationality) mappedData.nationality = ocrData.nationality;
-    if (ocrData.visa_status) mappedData.residence_status = ocrData.visa_status;
-    if (ocrData.zairyu_expire_date) mappedData.residence_expiry = ocrData.zairyu_expire_date;
-    if (ocrData.zairyu_card_number) mappedData.residence_card_number = ocrData.zairyu_card_number;
+    const residenceStatus = ocrData.residence_status || ocrData.visa_status;
+    if (residenceStatus) mappedData.residence_status = residenceStatus;
+    const residenceExpiry = ocrData.residence_expiry || ocrData.zairyu_expire_date;
+    if (residenceExpiry) mappedData.residence_expiry = residenceExpiry;
+    const residenceCardNumber = ocrData.residence_card_number || ocrData.zairyu_card_number;
+    if (residenceCardNumber) mappedData.residence_card_number = residenceCardNumber;
 
     // For driver's license
     if (ocrData.license_number) mappedData.license_number = ocrData.license_number;
-    if (ocrData.license_expire_date) mappedData.license_expiry = ocrData.license_expire_date;
+    const licenseExpiry = ocrData.license_expiry || ocrData.license_expire_date;
+    if (licenseExpiry) mappedData.license_expiry = licenseExpiry;
+
+    // Photo (data URI)
+    const photoUrl = ocrData.photo_url || ocrData.photo;
+    if (photoUrl) mappedData.photo_url = photoUrl;
 
     // Update the form with OCR extracted data
     setCandidate(prev => ({

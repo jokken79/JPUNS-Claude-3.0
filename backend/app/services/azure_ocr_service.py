@@ -101,11 +101,13 @@ class AzureOCRService:
 
             # Parse structured data based on document type
             parsed_data = self._parse_response(raw_text, document_type)
-            
+
             # Extract photo from document
             photo_data = self._extract_photo_from_document(image_data, document_type)
             if photo_data:
                 parsed_data['photo'] = photo_data
+
+            parsed_data = self._apply_common_aliases(parsed_data)
 
             return {
                 "success": True,
@@ -134,12 +136,56 @@ class AzureOCRService:
 
         return data
 
+    def _apply_common_aliases(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Add form-friendly aliases for extracted OCR data."""
+        if not isinstance(data, dict):
+            return data
+
+        # Names
+        if data.get('name_kanji') and not data.get('full_name_kanji'):
+            data['full_name_kanji'] = data['name_kanji']
+        if data.get('name_kana') and not data.get('full_name_kana'):
+            data['full_name_kana'] = data['name_kana']
+        if data.get('name_roman') and not data.get('full_name_roman'):
+            data['full_name_roman'] = data['name_roman']
+
+        # Dates
+        if data.get('birthday') and not data.get('date_of_birth'):
+            data['date_of_birth'] = data['birthday']
+        if data.get('zairyu_expire_date') and not data.get('residence_expiry'):
+            data['residence_expiry'] = data['zairyu_expire_date']
+        if data.get('license_expire_date') and not data.get('license_expiry'):
+            data['license_expiry'] = data['license_expire_date']
+
+        # Identification numbers
+        if data.get('zairyu_card_number') and not data.get('residence_card_number'):
+            data['residence_card_number'] = data['zairyu_card_number']
+
+        # Status fields
+        if data.get('visa_status') and not data.get('residence_status'):
+            data['residence_status'] = data['visa_status']
+
+        # Address aliases
+        if data.get('address'):
+            data.setdefault('current_address', data['address'])
+        if data.get('banchi') and not data.get('address_banchi'):
+            data['address_banchi'] = data['banchi']
+        if data.get('building') and not data.get('address_building'):
+            data['address_building'] = data['building']
+
+        # Photo
+        if data.get('photo') and not data.get('photo_url'):
+            data['photo_url'] = data['photo']
+
+        return data
+
     def _parse_zairyu_card(self, text: str) -> Dict[str, Any]:
         """Parse Zairyu Card (Residence Card) data"""
         import re
         result = {}
-        lines = text.split('\n')
-        lines = [line.strip() for line in lines if line.strip()]
+        raw_lines = [line.replace('\u3000', ' ') for line in text.split('\n')]
+        lines = [line.strip() for line in raw_lines if line.strip()]
+        normalized_lines = [re.sub(r'\s+', '', line) for line in lines]
         
         # --- DATE PARSING ---
         date_patterns = [
@@ -164,6 +210,8 @@ class AzureOCRService:
 
         # --- MAIN PARSING LOOP ---
         for i, line in enumerate(lines):
+            normalized_line = normalized_lines[i]
+            normalized_upper = normalized_line.upper()
             # Name (detect both Kanji and Roman)
             if 'name_kanji' not in result and any(keyword in line for keyword in ['氏名', 'Name']):
                 name_match = re.search(r'氏名[：:\s]*(.+)', line)
@@ -197,7 +245,9 @@ class AzureOCRService:
                 elif '女' in line or 'Female' in line: result['gender'] = '女性'
 
             # Nationality
-            if 'nationality' not in result and any(keyword in line for keyword in ['国籍', 'Nationality', '地域']):
+            if 'nationality' not in result and (
+                '国籍' in normalized_line or 'NATIONALITY' in normalized_upper or '地域' in normalized_line
+            ):
                 nat_match = re.search(r'国籍[・：:\s]*(.+)', line)
                 if nat_match and nat_match.group(1).strip():
                     result['nationality'] = self._normalize_nationality(nat_match.group(1).strip())
@@ -211,7 +261,9 @@ class AzureOCRService:
                     result['address'] = lines[i+1].strip()
 
             # Visa Status - IMPROVED DETECTION
-            if 'visa_status' not in result and any(keyword in line for keyword in ['在留資格', 'Status of residence', 'Status', '資格']):
+            if 'visa_status' not in result and (
+                '在留資格' in normalized_line or 'STATUSOFRESIDENCE' in normalized_upper or '資格' in normalized_line
+            ):
                 status_match = re.search(r'在留資格[：:\s]*(.+)', line)
                 if status_match and status_match.group(1).strip():
                     visa_text = status_match.group(1).strip()
@@ -266,6 +318,36 @@ class AzureOCRService:
 
         # --- FALLBACKS & POST-PROCESSING ---
 
+        # Additional Visa Status fallback scanning entire text
+        if 'visa_status' not in result:
+            combined_text = '\n'.join(lines)
+            combined_text_clean = combined_text.replace('\u3000', ' ')
+            status_pattern = re.compile(r'(?:在留資格|Status of residence|STATUS OF RESIDENCE)[：:\s]*([^\n]+)', re.IGNORECASE)
+            status_match = status_pattern.search(combined_text_clean)
+            if status_match:
+                candidate_status = re.sub(r'\d{4}[年/\-].*$', '', status_match.group(1)).strip()
+                if candidate_status:
+                    result['visa_status'] = candidate_status
+                    logger.info(f"OCR - Visa status fallback extraction: {candidate_status}")
+            else:
+                for idx, line in enumerate(lines):
+                    if any(keyword in line for keyword in ['在留資格', 'Status of residence', 'STATUS OF RESIDENCE']):
+                        for offset in range(1, 4):
+                            if idx + offset >= len(lines):
+                                break
+                            candidate_line = lines[idx + offset].strip()
+                            if not candidate_line:
+                                continue
+                            if re.search(r'(在留期間|PERIOD OF STAY)', candidate_line, re.IGNORECASE):
+                                continue
+                            clean_candidate = re.sub(r'\d{4}[年/\-].*$', '', candidate_line).strip()
+                            if clean_candidate:
+                                result['visa_status'] = clean_candidate
+                                logger.info(f"OCR - Visa status fallback (next lines): {clean_candidate}")
+                                break
+                        if 'visa_status' in result:
+                            break
+
         # Nationality Fallback
         if 'nationality' not in result:
             normalized_nat = self._normalize_nationality(text)
@@ -283,7 +365,26 @@ class AzureOCRService:
             ]
             # Overwrite full address with just the main parts, before banchi
             if any(main_address_parts):
-                 result['address'] = ''.join(main_address_parts).strip()
+                result['address'] = ''.join(main_address_parts).strip()
+
+        if result.get('visa_status') and 'residence_status' not in result:
+            result['residence_status'] = result['visa_status']
+        if result.get('birthday') and 'date_of_birth' not in result:
+            result['date_of_birth'] = result['birthday']
+        if result.get('zairyu_expire_date') and 'residence_expiry' not in result:
+            result['residence_expiry'] = result['zairyu_expire_date']
+        if result.get('zairyu_card_number') and 'residence_card_number' not in result:
+            result['residence_card_number'] = result['zairyu_card_number']
+
+        if result.get('name_kanji') and 'full_name_kanji' not in result:
+            result['full_name_kanji'] = result['name_kanji']
+        if result.get('name_kana') and 'full_name_kana' not in result:
+            result['full_name_kana'] = result['name_kana']
+        if result.get('name_roman') and 'full_name_roman' not in result:
+            result['full_name_roman'] = result['name_roman']
+
+        if result.get('address'):
+            result.setdefault('current_address', result['address'])
 
         return result
 
@@ -292,10 +393,13 @@ class AzureOCRService:
         import re
 
         result = {}
-        lines = text.split('\n')
+        raw_lines = [line.replace('\u3000', ' ') for line in text.split('\n')]
+        lines = [line.strip() for line in raw_lines if line.strip()]
 
         for i, line in enumerate(lines):
             line_clean = line.strip()
+            line_normalized = re.sub(r'\s+', '', line_clean)
+            line_upper = line_clean.upper()
 
             # Extract name (氏名)
             if '氏名' in line or 'Name' in line:
@@ -305,8 +409,16 @@ class AzureOCRService:
                 elif i + 1 < len(lines):
                     result['name_kanji'] = lines[i + 1].strip()
 
+            # Extract name kana (フリガナ)
+            if 'フリガナ' in line or '振り仮名' in line_normalized or 'FURIGANA' in line_upper:
+                kana_match = re.search(r'(?:フリガナ|ふりがな|FURIGANA)[：:\s]*(.+)', line)
+                if kana_match:
+                    result['name_kana'] = kana_match.group(1).strip()
+                elif i + 1 < len(lines):
+                    result['name_kana'] = lines[i + 1].strip()
+
             # Extract date of birth (生年月日)
-            if '生年月日' in line or '生年月日' in line:
+            if '生年月日' in line or 'BIRTH' in line_upper:
                 date_pattern = r'(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})'
                 match = re.search(date_pattern, line)
                 if match:
@@ -314,7 +426,7 @@ class AzureOCRService:
                     result['birthday'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
 
             # Extract license number (免許証番号)
-            if '免許証番号' in line or '第' in line:
+            if '免許証番号' in line or line_normalized.startswith('第'):
                 # License numbers: 第1234567890123号
                 number_pattern = r'第?(\d{12,13})号?'
                 match = re.search(number_pattern, line)
@@ -332,7 +444,7 @@ class AzureOCRService:
                     result['license_type'] = ', '.join(types)
 
             # Extract expiry date (有効期限)
-            if '有効期限' in line or '期限' in line:
+            if '有効期限' in line or 'EXPIRY' in line_upper or '期限' in line:
                 date_pattern = r'(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})'
                 match = re.search(date_pattern, line)
                 if match:
@@ -340,7 +452,7 @@ class AzureOCRService:
                     result['license_expire_date'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
 
             # Extract address (住所)
-            if '住所' in line or 'Address' in line:
+            if '住所' in line or 'ADDRESS' in line_upper:
                 addr_match = re.search(r'住所[：:\s]*(.+)', line)
                 if addr_match:
                     result['address'] = addr_match.group(1).strip()
@@ -356,12 +468,40 @@ class AzureOCRService:
                         result['address'] = ' '.join(address_parts)
 
             # Extract issuing date (交付年月日)
-            if '交付' in line:
+            if '交付' in line or 'ISSUED' in line_upper:
                 date_pattern = r'(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})'
                 match = re.search(date_pattern, line)
                 if match:
                     year, month, day = match.groups()
                     result['license_issue_date'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+
+        # Fallbacks using entire text
+        if 'license_number' not in result:
+            number_pattern = re.compile(r'第\s?(\d{12,13})号?')
+            number_match = number_pattern.search(''.join(lines))
+            if number_match:
+                result['license_number'] = number_match.group(1)
+
+        if 'license_expire_date' not in result:
+            date_pattern = re.compile(r'有効期限[：:\s]*(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})')
+            date_match = date_pattern.search(' '.join(lines))
+            if date_match:
+                year, month, day = date_match.groups()
+                result['license_expire_date'] = f"{year}-{int(month):02d}-{int(day):02d}"
+
+        if 'address' in result:
+            address_components = self._parse_japanese_address(result['address'])
+            result.update(address_components)
+            result.setdefault('current_address', result['address'])
+
+        if result.get('birthday') and 'date_of_birth' not in result:
+            result['date_of_birth'] = result['birthday']
+        if result.get('name_kanji') and 'full_name_kanji' not in result:
+            result['full_name_kanji'] = result['name_kanji']
+        if result.get('name_kana') and 'full_name_kana' not in result:
+            result['full_name_kana'] = result['name_kana']
+        if result.get('license_expire_date') and 'license_expiry' not in result:
+            result['license_expiry'] = result['license_expire_date']
 
         return result
 
@@ -622,46 +762,86 @@ class AzureOCRService:
             from io import BytesIO
             from PIL import Image
             import numpy as np
-            
+            try:  # OpenCV is optional for face detection
+                import cv2  # type: ignore
+            except ImportError:  # pragma: no cover - optional dependency at runtime
+                cv2 = None  # type: ignore
+
             # Convert bytes to PIL Image
-            image = Image.open(BytesIO(image_data))
-            
+            image = Image.open(BytesIO(image_data)).convert("RGB")
+
             # Convert to numpy array for processing
             img_array = np.array(image)
-            
-            # Try to detect and crop the photo region
-            # For Zairyu Card, photo is usually on the right side
+            if img_array.ndim == 2:  # grayscale to RGB
+                img_array = np.stack([img_array] * 3, axis=-1)
+
             height, width = img_array.shape[:2]
-            
-            if document_type == "zairyu_card":
-                # For residence cards, photo is on the right side of the card
-                # OPTIMIZED: Extract ONLY the photo rectangle (close zoom on face)
-                # Adjusted coordinates to capture just the photo area with minimal margins:
-                # - Height: 30% to 68% (tight crop on photo vertically)
-                # - Width: 65% to 92% (photo box on right side)
-                photo_region = img_array[int(height*0.30):int(height*0.68),
-                                       int(width*0.65):int(width*0.92)]
-                
-                # Convert back to PIL Image
-                photo_image = Image.fromarray(photo_region)
-                
-                # Convert to base64
-                buffered = BytesIO()
-                photo_image.save(buffered, format="JPEG", quality=85)
-                base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
-                
-                # Add data URI prefix
-                photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
-                
-                logger.info(f"OCR - Photo cropped from {document_type}")
-                return photo_data_uri
-            else:
-                # For other documents, return full image for now
-                base64_image = base64.b64encode(image_data).decode('utf-8')
-                photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
-                logger.info(f"OCR - Full photo returned from {document_type}")
-                return photo_data_uri
-            
+
+            # Prepare face detector
+            face_region = None
+            try:
+                if cv2 is not None:
+                    cascade_path = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
+                    face_cascade = cv2.CascadeClassifier(str(cascade_path)) if cascade_path.exists() else None
+                    if face_cascade is not None and not face_cascade.empty():
+                        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+                        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(80, 80))
+                        if len(faces) > 0:
+                            # Pick the largest detected face
+                            x, y, w, h = max(faces, key=lambda rect: rect[2] * rect[3])
+                            margin_x = int(w * 0.25)
+                            margin_y = int(h * 0.25)
+                            x1 = max(0, x - margin_x)
+                            y1 = max(0, y - margin_y)
+                            x2 = min(width, x + w + margin_x)
+                            y2 = min(height, y + h + margin_y)
+                            if x2 > x1 and y2 > y1:
+                                face_region = img_array[y1:y2, x1:x2]
+                                logger.info(
+                                    "OCR - Face detected for %s (x1=%s, y1=%s, x2=%s, y2=%s)",
+                                    document_type, x1, y1, x2, y2,
+                                )
+            except Exception as face_error:  # pragma: no cover - best effort logging
+                logger.warning(
+                    "OCR - Face detection failed, using heuristic crop: %s",
+                    face_error,
+                    exc_info=True,
+                )
+
+            if face_region is None:
+                # Heuristic fallback by document type
+                if document_type == "zairyu_card":
+                    y1 = int(height * 0.22)
+                    y2 = int(height * 0.80)
+                    x1 = int(width * 0.62)
+                    x2 = int(width * 0.93)
+                    face_region = img_array[max(0, y1):min(height, y2), max(0, x1):min(width, x2)]
+                    logger.info("OCR - Fallback zairyu photo crop applied")
+                elif document_type == "license":
+                    y1 = int(height * 0.20)
+                    y2 = int(height * 0.78)
+                    x1 = int(width * 0.05)
+                    x2 = int(width * 0.35)
+                    face_region = img_array[max(0, y1):min(height, y2), max(0, x1):min(width, x2)]
+                    logger.info("OCR - Fallback license photo crop applied")
+                else:
+                    face_region = img_array
+                    logger.info("OCR - Returning full image for %s", document_type)
+
+            if face_region.size == 0:
+                face_region = img_array
+
+            # Convert back to PIL Image
+            photo_image = Image.fromarray(face_region)
+
+            # Convert to base64
+            buffered = BytesIO()
+            photo_image.save(buffered, format="JPEG", quality=90)
+            base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
+            return photo_data_uri
+
         except ImportError:
             # If PIL is not available, return full image
             import base64

@@ -9,6 +9,13 @@
 
 ## Soluciones Implementadas
 
+### Actualización 2025-10-?? · Precisión mejorada para 在留カード y 免許証
+- ✅ **Detección de 在留資格 más agresiva**: se analizan líneas completas, texto limpio y saltos posteriores para capturar estados de residencia aun cuando el OCR los separe del rótulo.
+- ✅ **Alias automáticos para el formulario**: los valores extraídos (氏名, フリガナ, 在留期限, カード番号, etc.) se propagan a los campos del formulario (`full_name_*`, `residence_*`, `license_*`).
+- ✅ **OCR de 免許証 reforzado**: se reconocen フリガナ, direcciones multi-línea, fechas de expedición y vencimiento, además de normalizar números de licencia.
+- ✅ **Recorte inteligente de foto**: se incorpora detección facial con OpenCV; si no se encuentra rostro se aplica un recorte heurístico optimizado tanto para 在留カード como para 免許証.
+- ✅ **Direcciones enriquecidas**: se reusa el parser japonés para poblar 番地 y 建物 cuando estén disponibles.
+
 ### 1. Mejoras en `backend/app/services/azure_ocr_service.py`
 
 #### A. Extracción de Fecha de Nacimiento (生年月日)
