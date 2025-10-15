@@ -49,6 +49,27 @@ Password: admin123
 
 ---
 
+## 🚀 Actualización a Vite (Octubre 2025)
+
+El frontend de este proyecto ha sido **migrado de Create React App (`react-scripts`) a Vite**.
+
+### ¿Por qué Vite?
+
+-   **Velocidad Extrema:** El servidor de desarrollo arranca de forma casi instantánea.
+-   **Rendimiento:** Las actualizaciones en el código se reflejan en el navegador al instante (Hot Module Replacement).
+-   **Seguridad:** La migración ha **eliminado 9 vulnerabilidades de seguridad** que estaban presentes en las dependencias de `react-scripts`.
+-   **Moderno:** Vite es la herramienta de construcción preferida por la comunidad de React para nuevos proyectos.
+
+### ¿Qué ha cambiado?
+
+-   El proyecto ya no usa `react-scripts`.
+-   Los comandos (`npm start`, `npm run build`) ahora usan Vite, pero se ejecutan de la misma manera.
+-   El sistema de testing ahora es **Vitest**, el compañero de testing de Vite.
+
+No necesitas hacer nada diferente para iniciar el proyecto, ¡solo disfrutar de la velocidad!
+
+---
+
 ## 📁 Estructura del Proyecto
 
 ```
@@ -98,34 +119,16 @@ JPUNS-Claude-3.0/
 │       │   └── services/   # Lógica de negocio
 │       └── requirements.txt
 │
-├── 🎨 Frontend (React + TypeScript)
+├── 🎨 Frontend (Vite + React)
 │   └── frontend/
-│       ├── src/
-│       │   ├── components/ # Componentes React
-│       │   │   ├── Layout.tsx     # Layout principal
-│       │   │   ├── ProtectedRoute.tsx # Rutas protegidas
-│       │   │   ├── ThemeSwitcher.tsx # Cambio de tema
-│       │   │   └── ...           # Otros componentes
-│       │   ├── pages/      # Páginas principales
-│       │   │   ├── Dashboard.tsx   # Dashboard principal
-│       │   │   ├── Candidates.tsx  # Gestión de candidatos
-│       │   │   ├── Employees.tsx   # Gestión de empleados
-│       │   │   ├── Factories.tsx   # Gestión de fábricas
-│       │   │   ├── TimerCards.tsx  # Control de asistencia
-│       │   │   ├── Salary.tsx      # Gestión de salarios
-│       │   │   ├── Requests.tsx    # Gestión de solicitudes
-│       │   │   ├── DateBaseJP.tsx  # Gestión integrada de BD
-│       │   │   ├── AdminerDBJP.tsx # Interfaz Adminer
-│       │   │   └── ...           # Otras páginas
-│       │   ├── styles/     # Estilos CSS
-│       │   │   ├── Layout.css      # Estilos del layout
-│       │   │   ├── DateBaseJP.css  # Estilos DateBaseJP
-│       │   │   ├── AdminerDBJP.css # Estilos AdminerDBJP
-│       │   │   └── ...           # Otros estilos
-│       │   ├── context/    # Contextos React
-│       │   │   ├── PageVisibilityContext.tsx # Visibilidad de páginas
-│       │   │   ├── ThemeContext.tsx # Tema de la aplicación
-│       │   │   └── ...           # Otros contextos
+│       ├── index.html      # Punto de entrada de Vite
+│       ├── vite.config.js  # Configuración de Vite
+│       ├── src/            # Código fuente de la aplicación
+│       │   ├── index.tsx   # Punto de entrada de React
+│       │   ├── components/ # Componentes
+│       │   ├── pages/      # Páginas
+│       │   ├── styles/     # Estilos
+│       │   ├── context/    # Contextos
 │       │   ├── services/   # Servicios API
 │       │   └── utils/      # Utilidades
 │       └── package.json
@@ -261,9 +264,11 @@ Use esto solo si:
 - **Azure Computer Vision** - OCR avanzado
 
 ### Frontend
+- **Vite** - Herramienta de construcción y servidor de desarrollo ultrarrápido.
 - **React 18** - Biblioteca de UI
 - **TypeScript** - JavaScript tipado
 - **Tailwind CSS** - Framework CSS
+- **Vitest** - Framework de testing para Vite.
 - **React Router** - Navegación
 - **Axios** - Cliente HTTP
 

@@ -12,8 +12,8 @@ RUN npm install --legacy-peer-deps
 # Copiar código de la aplicación
 COPY . .
 
-# Exponer puerto
+# Exponer puerto para Vite dev server
 EXPOSE 3000
 
-# Comando para desarrollo
-CMD ["npx", "react-scripts", "start"]
+# Comando para desarrollo con Vite
+CMD ["npm", "run", "start"]

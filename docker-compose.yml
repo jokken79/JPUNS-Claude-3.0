@@ -128,7 +128,7 @@ services:
       start_period: 40s
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # Frontend (React)
+  # Frontend (React + Vite)
   frontend:
     build:
       context: ./frontend
@@ -136,10 +136,10 @@ services:
     container_name: uns-claudejp-frontend
     restart: always
     environment:
-      REACT_APP_API_URL: http://localhost:8000
-      REACT_APP_NAME: UNS-ClaudeJP 2.0
-      REACT_APP_COMPANY: UNS企画
-      REACT_APP_LANGUAGE: ja
+      VITE_API_URL: http://localhost:8000
+      VITE_APP_NAME: UNS-ClaudeJP 3.1
+      VITE_APP_COMPANY: UNS企画
+      VITE_APP_LANGUAGE: ja
     volumes:
       - ./frontend:/app
       - /app/node_modules
