@@ -12,7 +12,8 @@ export type PageKey =
   | 'salary'
   | 'requests'
   | 'database'
-  | 'adminer';
+  | 'adminer'
+  | 'visaCompliance';
 
 type PageVisibilityState = Record<PageKey, boolean>;
 
@@ -38,6 +39,7 @@ const DEFAULT_VISIBILITY: PageVisibilityState = {
   requests: true,
   database: true,
   adminer: true,
+  visaCompliance: true,
 };
 
 const PageVisibilityContext = createContext<PageVisibilityContextValue | undefined>(

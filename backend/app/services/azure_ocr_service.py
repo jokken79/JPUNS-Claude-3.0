@@ -3,16 +3,20 @@ Azure Computer Vision OCR Service - UNS-ClaudeJP 2.0
 Service for processing documents using Azure Computer Vision API
 """
 import os
-import base64
 import logging
-from typing import Dict, Any, Optional
-from pathlib import Path
+from typing import Dict, Any
 
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
 from msrest.authentication import CognitiveServicesCredentials
 
 from app.core.config_azure import AZURE_ENDPOINT, AZURE_KEY, AZURE_API_VERSION
+from app.services.ocr import (
+    extract_document_photo,
+    extract_primary_dates,
+    normalize_nationality,
+    parse_japanese_address,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +107,7 @@ class AzureOCRService:
             parsed_data = self._parse_response(raw_text, document_type)
 
             # Extract photo from document
-            photo_data = self._extract_photo_from_document(image_data, document_type)
+            photo_data = extract_document_photo(image_data, document_type)
             if photo_data:
                 parsed_data['photo'] = photo_data
 
@@ -188,25 +192,7 @@ class AzureOCRService:
         normalized_lines = [re.sub(r'\s+', '', line) for line in lines]
         
         # --- DATE PARSING ---
-        date_patterns = [
-            r'(\d{4})[年/\-\.](\d{1,2})[月/\-\.](\d{1,2})日?',
-            r'(\d{4})[/\-\.](\d{1,2})[/\-\.](\d{1,2})'
-        ]
-        all_dates = []
-        for line in lines:
-            for pattern in date_patterns:
-                for match in re.finditer(pattern, line):
-                    try:
-                        year, month, day = [int(g) for g in match.groups()]
-                        if 1 <= month <= 12 and 1 <= day <= 31:
-                            all_dates.append(f"{year}-{month:02d}-{day:02d}")
-                    except (ValueError, IndexError):
-                        continue
-        
-        if all_dates:
-            result['birthday'] = all_dates[0]
-            if len(all_dates) > 1:
-                result['zairyu_expire_date'] = all_dates[-1]
+        result.update(extract_primary_dates(lines))
 
         # --- MAIN PARSING LOOP ---
         for i, line in enumerate(lines):
@@ -250,7 +236,7 @@ class AzureOCRService:
             ):
                 nat_match = re.search(r'国籍[・：:\s]*(.+)', line)
                 if nat_match and nat_match.group(1).strip():
-                    result['nationality'] = self._normalize_nationality(nat_match.group(1).strip())
+                    result['nationality'] = normalize_nationality(nat_match.group(1).strip())
 
             # Address
             if 'address' not in result and any(keyword in line for keyword in ['住居地', 'Address']):
@@ -350,12 +336,12 @@ class AzureOCRService:
 
         # Nationality Fallback
         if 'nationality' not in result:
-            normalized_nat = self._normalize_nationality(text)
+            normalized_nat = normalize_nationality(text)
             if normalized_nat != text: result['nationality'] = normalized_nat
         
         # Address Component Parsing
         if 'address' in result:
-            address_components = self._parse_japanese_address(result['address'])
+            address_components = parse_japanese_address(result['address'])
             result.update(address_components)
             main_address_parts = [
                 address_components.get('prefecture', ''),
@@ -490,7 +476,7 @@ class AzureOCRService:
                 result['license_expire_date'] = f"{year}-{int(month):02d}-{int(day):02d}"
 
         if 'address' in result:
-            address_components = self._parse_japanese_address(result['address'])
+            address_components = parse_japanese_address(result['address'])
             result.update(address_components)
             result.setdefault('current_address', result['address'])
 
@@ -616,249 +602,6 @@ class AzureOCRService:
         
         return final_result
 
-    def _normalize_nationality(self, nationality: str) -> str:
-        """Normalize nationality to Japanese format"""
-        nationality_mapping = {
-            'VIETNAM': 'ベトナム',
-            'VIET NAM': 'ベトナム',
-            'Vietnam': 'ベトナム',
-            'Viet Nam': 'ベトナム',
-            'vietnan': 'ベトナム',  # Common OCR error
-            'VIETNAN': 'ベトナム',
-            'PHILIPPINES': 'フィリピン',
-            'Philippines': 'フィリピン',
-            'CHINA': '中国',
-            'China': '中国',
-            'KOREA': '韓国',
-            'Korea': '韓国',
-            'BRAZIL': 'ブラジル',
-            'Brazil': 'ブラジル',
-            'PERU': 'ペルー',
-            'Peru': 'ペルー',
-            'INDONESIA': 'インドネシア',
-            'Indonesia': 'インドネシア',
-            'THAILAND': 'タイ',
-            'Thailand': 'タイ',
-            'MYANMAR': 'ミャンマー',
-            'Myanmar': 'ミャンマー',
-            'CAMBODIA': 'カンボジア',
-            'Cambodia': 'カンボジア',
-            'NEPAL': 'ネパール',
-            'Nepal': 'ネパール',
-            'MONGOLIA': 'モンゴル',
-            'Mongolia': 'モンゴル',
-            'BANGLADESH': 'バングラデシュ',
-            'Bangladesh': 'バングラデシュ',
-            'SRI LANKA': 'スリランカ',
-            'Sri Lanka': 'スリランカ'
-        }
-        
-        # Try exact match first
-        normalized = nationality_mapping.get(nationality.upper())
-        if normalized:
-            return normalized
-        
-        # Try partial match
-        for key, value in nationality_mapping.items():
-            if key.lower() in nationality.lower() or nationality.lower() in key.lower():
-                return value
-        
-        # Return original if no mapping found
-        return nationality
-
-    def _parse_japanese_address(self, address: str) -> Dict[str, str]:
-        """Parse Japanese address into components"""
-        import re
-        
-        result = {
-            'postal_code': '',
-            'prefecture': '',
-            'city': '',
-            'ward': '',
-            'district': '',
-            'banchi': '',
-            'building': ''
-        }
-        
-        # Extract postal code if present
-        postal_match = re.search(r'(\d{3}-\d{4})', address)
-        if postal_match:
-            result['postal_code'] = postal_match.group(1)
-        
-        # Extract prefecture
-        prefectures = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
-                      '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
-                      '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
-                      '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
-                      '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
-                      '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
-                      '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
-        
-        for prefecture in prefectures:
-            if prefecture in address:
-                result['prefecture'] = prefecture
-                # Remove prefecture from address for further processing
-                address = address.replace(prefecture, '', 1)
-                break
-        
-        # Split remaining address by common delimiters
-        # Pattern: 市区町村 + 番地 + 建物名
-        # Example: 名古屋市東区徳川2-18-18
-        #          city  ward district banchi
-        
-        # Match patterns like "名古屋市東区徳川"
-        city_ward_pattern = r'([^0-9]+[市区町村])([^0-9]+[区郡]?[^0-9]*)([^0-9]+)?'
-        match = re.search(city_ward_pattern, address)
-        if match:
-            result['city'] = match.group(1)
-            result['ward'] = match.group(2) if match.group(2) else ''
-            result['district'] = match.group(3) if match.group(3) else ''
-        
-        # Extract banchi (番地) - numbers after district
-        # Handle patterns like "908番地1の2" or "908-1-2"
-        banchi_patterns = [
-            r'(\d+)番地(\d+)の(\d+)',  # 908番地1の2
-            r'(\d+)[−\-\s](\d+)[−\-\s](\d+)',  # 908-1-2
-            r'(\d+)[−\-\s]*(\d+)[−\-\s]*(\d*)',  # More flexible
-        ]
-        
-        for pattern in banchi_patterns:
-            banchi_match = re.search(pattern, address)
-            if banchi_match:
-                groups = banchi_match.groups()
-                # Format as XXX番地XのX
-                if groups[2]:  # Third group exists
-                    result['banchi'] = f"{groups[0]}番地{groups[1]}の{groups[2]}"
-                else:
-                    result['banchi'] = f"{groups[0]}番地{groups[1]}"
-                logger.info(f"OCR - Parsed banchi: {result['banchi']}")
-                break
-        
-        # Extract building name (if any) - usually after numbers
-        # Look for patterns like "メゾン徳川101号室"
-        building_patterns = [
-            r'(\d+[−\-\s]*\d+[−\-\s]*\d*\s*)([^0-9]+号室[^0-9]*)',  # Building with room number
-            r'(\d+[−\-\s]*\d+[−\-\s]*\d*\s*)([^0-9]+)',  # Building name after numbers
-        ]
-        
-        for pattern in building_patterns:
-            building_match = re.search(pattern, address)
-            if building_match:
-                building_parts = building_match.groups()
-                if len(building_parts) > 1:
-                    building_name = building_parts[1].strip()
-                    if building_name != "番地":
-                        result['building'] = building_name
-                        logger.info(f"OCR - Parsed building: {result['building']}")
-                        break
-        
-        return result
-
-    def _extract_photo_from_document(self, image_data: bytes, document_type: str) -> Optional[str]:
-        """Extract photo from document image"""
-        try:
-            # Import required libraries
-            import base64
-            from io import BytesIO
-            from PIL import Image
-            import numpy as np
-            try:  # OpenCV is optional for face detection
-                import cv2  # type: ignore
-            except ImportError:  # pragma: no cover - optional dependency at runtime
-                cv2 = None  # type: ignore
-
-            # Convert bytes to PIL Image
-            image = Image.open(BytesIO(image_data)).convert("RGB")
-
-            # Convert to numpy array for processing
-            img_array = np.array(image)
-            if img_array.ndim == 2:  # grayscale to RGB
-                img_array = np.stack([img_array] * 3, axis=-1)
-
-            height, width = img_array.shape[:2]
-
-            # Prepare face detector
-            face_region = None
-            try:
-                if cv2 is not None:
-                    cascade_path = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
-                    face_cascade = cv2.CascadeClassifier(str(cascade_path)) if cascade_path.exists() else None
-                    if face_cascade is not None and not face_cascade.empty():
-                        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-                        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(80, 80))
-                        if len(faces) > 0:
-                            # Pick the largest detected face
-                            x, y, w, h = max(faces, key=lambda rect: rect[2] * rect[3])
-                            margin_x = int(w * 0.25)
-                            margin_y = int(h * 0.25)
-                            x1 = max(0, x - margin_x)
-                            y1 = max(0, y - margin_y)
-                            x2 = min(width, x + w + margin_x)
-                            y2 = min(height, y + h + margin_y)
-                            if x2 > x1 and y2 > y1:
-                                face_region = img_array[y1:y2, x1:x2]
-                                logger.info(
-                                    "OCR - Face detected for %s (x1=%s, y1=%s, x2=%s, y2=%s)",
-                                    document_type, x1, y1, x2, y2,
-                                )
-            except Exception as face_error:  # pragma: no cover - best effort logging
-                logger.warning(
-                    "OCR - Face detection failed, using heuristic crop: %s",
-                    face_error,
-                    exc_info=True,
-                )
-
-            if face_region is None:
-                # Heuristic fallback by document type
-                if document_type == "zairyu_card":
-                    y1 = int(height * 0.22)
-                    y2 = int(height * 0.80)
-                    x1 = int(width * 0.62)
-                    x2 = int(width * 0.93)
-                    face_region = img_array[max(0, y1):min(height, y2), max(0, x1):min(width, x2)]
-                    logger.info("OCR - Fallback zairyu photo crop applied")
-                elif document_type == "license":
-                    y1 = int(height * 0.20)
-                    y2 = int(height * 0.78)
-                    x1 = int(width * 0.05)
-                    x2 = int(width * 0.35)
-                    face_region = img_array[max(0, y1):min(height, y2), max(0, x1):min(width, x2)]
-                    logger.info("OCR - Fallback license photo crop applied")
-                else:
-                    face_region = img_array
-                    logger.info("OCR - Returning full image for %s", document_type)
-
-            if face_region.size == 0:
-                face_region = img_array
-
-            # Convert back to PIL Image
-            photo_image = Image.fromarray(face_region)
-
-            # Convert to base64
-            buffered = BytesIO()
-            photo_image.save(buffered, format="JPEG", quality=90)
-            base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
-
-            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
-            return photo_data_uri
-
-        except ImportError:
-            # If PIL is not available, return full image
-            import base64
-            from io import BytesIO
-            base64_image = base64.b64encode(image_data).decode('utf-8')
-            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
-            logger.warning(f"OCR - PIL not available, returning full image from {document_type}")
-            return photo_data_uri
-            
-        except Exception as e:
-            logger.error(f"Error extracting photo: {e}")
-            # Fallback: return full image
-            import base64
-            from io import BytesIO
-            base64_image = base64.b64encode(image_data).decode('utf-8')
-            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
-            return photo_data_uri
 
 
 # Create singleton instance
