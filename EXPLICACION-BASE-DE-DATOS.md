@@ -27,7 +27,7 @@ volumes:
 - PostgreSQL automáticamente ejecuta todos los archivos `.sql` en `/docker-entrypoint-initdb.d/`
 - El archivo `01_init_database.sql` crea toda la estructura inicial
 
-### **Paso 2: Creación de Estructura**
+### **Paso 2: Creación de Estructura**\/
 **Archivo**: [`base-datos/01_init_database.sql`](base-datos/01_init_database.sql)
 
 #### ¿Qué crea este archivo?

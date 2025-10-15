@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import useDashboardData from '../hooks/useDashboardData';
-import { StatsGridSkeleton, AlertSkeleton, ActivitySkeleton, FactoriesTableSkeleton, } from '../components/skeletons';
+import { StatsGridSkeleton, AlertSkeleton, ActivitySkeleton, FactoriesTableSkeleton } from '../components/skeletons/index';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 import ThemeTest from '../components/ThemeTest';
 import ThemeDemo from '../components/ThemeDemo';

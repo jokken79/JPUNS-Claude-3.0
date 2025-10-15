@@ -13,6 +13,7 @@
 @import "./styles/themes/theme-earth.css";
 @import "./styles/themes/theme-royal.css";
 @import "./styles/themes/theme-sakura.css";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -96,8 +97,6 @@
 :root.theme-sakura {
   /* Sakura theme variables will override the base */
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&display=swap');
 
 body {
   margin: 0;

@@ -123,129 +123,97 @@
             overflow: auto;
         }
 
-        #preview_content .print-page {
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-        }
-
-        .print-page {
-            width: 297mm;
-            min-height: 210mm;
-            background: #ffffff;
-            color: #111827;
-            padding: 14mm 18mm;
-            box-sizing: border-box;
-            font-family: 'MS Gothic', 'Yu Gothic', sans-serif;
-            font-size: 9.5pt;
-            line-height: 1.5;
-        }
-
-        .print-header {
-            display: flex;
-            gap: 12mm;
-            align-items: stretch;
-            margin-bottom: 10mm;
-        }
-
-        .print-photo-frame {
-            width: 40mm;
-            height: 50mm;
-            border: 1px solid #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8fafc;
-            overflow: hidden;
-        }
-
-        .print-photo-frame img {
+        /* New styles for PDF-like printing */
+        .new-print-page {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            background: #ffffff;
+            color: #000000;
+            font-family: 'MS Gothic', 'Yu Gothic', sans-serif;
+            font-size: 9pt;
+            line-height: 1.4;
+            border: 1px solid #000;
         }
-
-        .print-basic-table,
-        .print-table {
+        .new-print-page table {
             width: 100%;
             border-collapse: collapse;
         }
-
-        .print-basic-table th,
-        .print-basic-table td,
-        .print-table th,
-        .print-table td {
+        .new-print-page th, .new-print-page td {
             border: 1px solid #000;
-            padding: 3mm;
+            padding: 2px 4px;
             text-align: left;
-            vertical-align: top;
+            vertical-align: middle;
+            height: 28px; /* Approximate height */
         }
-
-        .print-basic-table th,
-        .print-table th {
-            background: #e5e7eb;
-            font-weight: 600;
+        .new-print-page .header-th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #E0E0E0;
         }
-
-        .print-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8mm;
-            margin-bottom: 10mm;
+        .new-print-page .label-th {
+            text-align: center;
+            width: 80px;
+            background-color: #E0E0E0;
         }
-
-        .print-section {
-            border: 1px solid #000;
-            padding: 4mm;
+        .new-print-page .small-label-th {
+            width: 40px;
+            text-align: center;
+            background-color: #E0E0E0;
         }
-
-        .print-section.full-width {
-            grid-column: 1 / -1;
+        .new-print-page .value-td {
+            padding-left: 10px;
         }
-
-        .print-section-title {
-            font-weight: 700;
-            font-size: 11pt;
-            margin-bottom: 3mm;
-            background: #e5e7eb;
-            padding: 2mm 3mm;
-            border-left: 3mm solid #1D4ED8;
+        .new-print-page .nested-table {
+            height: 100%;
         }
-
-        .print-tags {
+        .new-print-page .nested-table td {
+            border: none;
+            padding: 0;
+        }
+        .new-print-page .photo-cell {
+            width: 120px;
+            height: 140px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .new-print-page .photo-cell img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .new-print-page .checkbox-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: 4px 8px;
+            padding: 4px;
+        }
+        .new-print-page .checkbox-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .new-print-page .checkbox-box {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000;
+            display: inline-block;
+            text-align: center;
+            line-height: 12px;
         }
 
-        .print-tag {
-            border: 1px solid #1D4ED8;
-            background: #eef2ff;
-            color: #1D4ED8;
-            border-radius: 9999px;
-            padding: 2px 8px;
-            font-size: 8.5pt;
-        }
-
-        .print-muted {
-            color: #6b7280;
-            font-size: 8.5pt;
-        }
-
-        .print-table td span.block {
-            display: block;
-        }
 
         @media print {
             body { margin: 0; padding: 0; }
             #app { display: none !important; }
             #print_container { display: block !important; }
-            .pdf-background { display: none !important; }
-            .print-overlay { display: none !important; }
-            .print-field { display: block !important; }
-            .print-photo { display: block !important; }
-            @page { size: A4 landscape; margin: 10mm; }
-            .print-page { width: auto; min-height: auto; margin: 0; padding: 10mm; box-shadow: none; }
-            .print-grid { gap: 6mm; }
             #preview_modal { display: none !important; }
+            @page { 
+                size: A4 landscape; 
+                margin: 10mm;
+            }
+            .new-print-page {
+                border: none;
+                box-shadow: none;
+            }
         }
     </style>
 </head>
@@ -1485,206 +1453,304 @@
 
         function generatePrintHTML(forPrint) {
             const data = collectFormData();
+
+            // Helper to generate checkboxes for Japanese skills
+            const jpSkillCheck = (level, value) => {
+                return level === value ? '●' : '○';
+            };
+
+            // Helper for simple yes/no radio buttons
+            const yesNoCheck = (value, target) => {
+                return value === target ? '■' : '□';
+            };
+
+            const experiences = [
+                {name: "NC旋盤", key: "NC旋盤"},
+                {name: "旋盤", key: "旋盤"},
+                {name: "プレス", key: "プレス"},
+                {name: "フォークリフト", key: "フォークリフト"},
+                {name: "梱包", key: "梱包"},
+                {name: "溶接", key: "溶接"},
+                {name: "車部品組立", key: "車部品組立"},
+                {name: "車部品ライン", key: "車部品ライン"},
+                {name: "車部品検査", key: "車部品検査"},
+                {name: "電子部品検査", key: "電子部品検査"},
+                {name: "食品加工", key: "食品加工"},
+                {name: "鋳造", key: "鋳造"},
+                {name: "塗装", key: "塗装"},
+                {name: "ラインリーダー", key: "ラインリーダー"},
+                {name: "その他", key: "その他"}
+            ];
+
+            const experiencesHTML = experiences.map(exp => {
+                const isChecked = data.experiences.includes(exp.key);
+                return `<span style="display:inline-block; margin-right:8px;">${isChecked ? '■' : '□'} ${exp.name}</span>`;
+            }).join('');
+
             const jobRows = (data.jobHistory || [])
-                .filter(job => [job.start, job.end, job.hakenmoto, job.hakensaki, job.content, job.reason].some(field => (field ?? '').toString().trim()))
+                .filter(job => [job.start, job.end, job.hakenmoto, job.hakensaki, job.content].some(field => (field ?? '').toString().trim()))
                 .map(job => `
                     <tr>
-                        <td>${formatPeriod(job.start, job.end)}</td>
-                        <td>${formatValue(job.hakenmoto)}</td>
-                        <td>${formatValue(job.hakensaki)}</td>
-                        <td>${formatValue(job.content)}</td>
-                        <td>${formatValue(job.reason)}</td>
+                        <td class="value-td" colspan="2">${formatPeriod(job.start, job.end)}</td>
                     </tr>
-                `)
-                .join('');
+                `).join('');
 
-            const familyRows = (data.familyMembers || [])
-                .filter(member => [member.name, member.relation, member.birthday, member.age, member.residence, member.dependent].some(field => (field ?? '').toString().trim()))
-                .map(member => `
+            // Generar al menos 6 filas de familia vacías si no hay datos
+            const familyData = data.familyMembers || [];
+            const minFamilyRows = 6;
+            const familyRows = [];
+
+            for (let i = 0; i < minFamilyRows; i++) {
+                const member = familyData[i] || {};
+                familyRows.push(`
                     <tr>
-                        <td>${formatValue(member.name)}</td>
-                        <td>${formatValue(member.relation)}</td>
-                        <td>${formatValue(member.birthday)}</td>
-                        <td>${formatValue(member.age)}</td>
-                        <td>${formatValue(member.residence)}</td>
-                        <td>${formatValue(member.dependent)}</td>
+                        <td class="value-td">${formatValue(member.name, '')}</td>
+                        <td class="value-td">${formatValue(member.relation, '')}</td>
+                        <td class="value-td">${formatValue(member.age, '')}</td>
+                        <td class="value-td">${formatValue(member.residence, '')}</td>
+                        <td class="value-td">${formatValue(member.dependent, '')}</td>
                     </tr>
-                `)
-                .join('');
-
-            const experiencesTags = (data.experiences || []).length
-                ? data.experiences.map(exp => `<span class="print-tag">${formatValue(exp)}</span>`).join('')
-                : '<span class="print-muted">経験作業の登録はありません</span>';
-
-            const photoContent = data.photo && data.photo !== window.location.href
-                ? `<img src="${escapeHtml(data.photo)}" alt="写真">`
-                : '<span class="print-muted">写真未登録</span>';
+                `);
+            }
 
             return `
-                <div class="print-page">
-                    <div class="print-header">
-                        <div class="print-photo-frame">${photoContent}</div>
-                        <table class="print-basic-table">
-                            <tr>
-                                <th>氏名</th>
-                                <td>${formatValue(data.name_kanji)}</td>
-                                <th>フリガナ</th>
-                                <td>${formatValue(data.name_furigana)}</td>
-                            </tr>
-                            <tr>
-                                <th>生年月日</th>
-                                <td>${formatValue(data.birthday)}</td>
-                                <th>年齢</th>
-                                <td>${formatValueWithUnit(data.age, '歳')}</td>
-                            </tr>
-                            <tr>
-                                <th>性別</th>
-                                <td>${formatValue(data.gender)}</td>
-                                <th>国籍</th>
-                                <td>${formatValue(data.nationality)}</td>
-                            </tr>
-                            <tr>
-                                <th>ID</th>
-                                <td>${formatValue(data.applicant_id)}</td>
-                                <th>居住地域</th>
-                                <td>${formatValue(data.region)}</td>
-                            </tr>
-                        </table>
-                    </div>
+            <div class="new-print-page">
+                <table class="rirekisho-table" style="width:100%; font-size:8pt;">
+                    <!-- Header -->
+                    <tr>
+                        <td colspan="6" class="header-th" style="font-size:14pt; font-weight:bold; text-align:center; padding:6px;">履歴書</td>
+                        <td colspan="4" class="header-th" style="font-size:11pt; font-weight:bold; text-align:center;">日本語能力</td>
+                    </tr>
 
-                    <div class="print-grid">
-                        <section class="print-section">
-                            <div class="print-section-title">住所・連絡先</div>
-                            <table class="print-table">
-                                <tr><th>郵便番号</th><td>${formatValue(data.postal_code)}</td></tr>
-                                <tr><th>住所</th><td>${formatValue(data.address)}</td></tr>
-                                <tr><th>携帯電話</th><td>${formatValue(data.mobile)}</td></tr>
-                                <tr><th>電話番号</th><td>${formatValue(data.phone)}</td></tr>
-                                <tr>
-                                    <th>緊急連絡先</th>
-                                    <td>
-                                        <span class="block">${formatValue(data.emergency_name)}</span>
-                                        <span class="block print-muted">続柄: ${formatValue(data.emergency_relation)}</span>
-                                        <span class="block print-muted">電話: ${formatValue(data.emergency_phone)}</span>
+                    <!-- Main Row: Personal Info (Left) + Japanese Skills (Right) -->
+                    <tr>
+                        <!-- Left Section: Personal Info -->
+                        <td colspan="6" style="vertical-align:top; padding:0;">
+                            <table class="nested-table" style="width:100%; height:100%;">
+                                <tr style="height:24px;">
+                                    <td class="label-th" style="width:15%;">受付日</td>
+                                    <td class="value-td" style="width:18%;"></td>
+                                    <td class="label-th" style="width:15%;">来日</td>
+                                    <td class="value-td" colspan="3"></td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">フリガナ</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.name_furigana, '')}</td>
+                                    <td class="label-th" style="width:12%;">性別</td>
+                                    <td class="value-td" style="width:12%;">${formatValue(data.gender, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">氏名</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.name_kanji, '')}</td>
+                                    <td rowspan="3" colspan="2" class="photo-cell" style="width:120px; height:140px; text-align:center; vertical-align:middle; border:1px solid #000;">
+                                        ${data.photo ? `<img src="${data.photo}" style="max-width:115px; max-height:135px; object-fit:contain;">` : ''}
                                     </td>
                                 </tr>
-                            </table>
-                        </section>
-
-                        <section class="print-section">
-                            <div class="print-section-title">在留・身分証情報</div>
-                            <table class="print-table">
-                                <tr><th>在留資格</th><td>${formatValue(data.visa_type)}</td></tr>
-                                <tr><th>在留期間</th><td>${formatValue(data.visa_period)}</td></tr>
-                                <tr><th>在留期間満了日</th><td>${formatValue(data.visa_expiry)}</td></tr>
-                                <tr><th>資格外活動許可日</th><td>${formatValue(data.permission_date)}</td></tr>
-                                <tr><th>交付日</th><td>${formatValue(data.issue_date)}</td></tr>
-                                <tr><th>資格外活動</th><td>${formatMultiline(data.authorized_activity)}</td></tr>
-                                <tr><th>就労制限</th><td>${formatMultiline(data.employer_restriction)}</td></tr>
-                                <tr><th>在留カード番号</th><td>${formatValue(data.residence_card_no)}</td></tr>
-                                <tr><th>パスポート番号</th><td>${formatValue(data.passport_no)}</td></tr>
-                                <tr><th>パスポート有効期限</th><td>${formatValue(data.passport_expiry)}</td></tr>
-                            </table>
-                        </section>
-
-                        <section class="print-section">
-                            <div class="print-section-title">運転・保険</div>
-                            <table class="print-table">
-                                <tr><th>運転免許証番号</th><td>${formatValue(data.license_no)}</td></tr>
-                                <tr><th>免許種類</th><td>${formatValue(data.license_type)}</td></tr>
-                                <tr><th>免許有効期限</th><td>${formatValue(data.license_expiry)}</td></tr>
-                                <tr><th>車両所持</th><td>${formatValue(data.car_owner)}</td></tr>
-                                <tr><th>自動車保険</th><td>${formatValue(data.insurance)}</td></tr>
-                            </table>
-                        </section>
-
-                        <section class="print-section">
-                            <div class="print-section-title">日本語力・学歴</div>
-                            <table class="print-table">
-                                <tr><th>会話</th><td>${formatValue(data.speak_level)}</td></tr>
-                                <tr><th>聴解</th><td>${formatValue(data.listen_level)}</td></tr>
-                                <tr><th>漢字</th><td>${formatValue(data.kanji_level)}</td></tr>
-                                <tr><th>カナ読</th><td>${formatValue(data.kana_read)}</td></tr>
-                                <tr><th>カナ書</th><td>${formatValue(data.kana_write)}</td></tr>
-                                <tr><th>最終学歴</th><td>${formatValue(data.education)}</td></tr>
-                                <tr><th>専攻</th><td>${formatValue(data.major)}</td></tr>
-                            </table>
-                        </section>
-
-                        <section class="print-section">
-                            <div class="print-section-title">身体情報・健康状態</div>
-                            <table class="print-table">
-                                <tr><th>身長</th><td>${formatValueWithUnit(data.height, 'cm')}</td></tr>
-                                <tr><th>体重</th><td>${formatValueWithUnit(data.weight, 'kg')}</td></tr>
-                                <tr><th>服サイズ</th><td>${formatValue(data.uniform_size)}</td></tr>
-                                <tr><th>ウエスト</th><td>${formatValueWithUnit(data.waist, 'cm')}</td></tr>
-                                <tr><th>靴サイズ</th><td>${formatValueWithUnit(data.shoe_size, 'cm')}</td></tr>
-                                <tr><th>血液型</th><td>${formatValue(data.blood_type)}</td></tr>
-                                <tr><th>視力(右)</th><td>${formatValue(data.vision_right)}</td></tr>
-                                <tr><th>視力(左)</th><td>${formatValue(data.vision_left)}</td></tr>
-                                <tr><th>メガネ</th><td>${formatValue(data.glasses)}</td></tr>
-                                <tr><th>利き腕</th><td>${formatValue(data.dominant_arm)}</td></tr>
-                                <tr><th>アレルギー</th><td>${formatValue(data.allergy)}</td></tr>
-                                <tr><th>安全靴</th><td>${formatValue(data.safety_shoes)}</td></tr>
-                                <tr><th>ワクチン</th><td>${formatValue(data.vaccine)}</td></tr>
-                            </table>
-                        </section>
-
-                        <section class="print-section">
-                            <div class="print-section-title">勤務条件・備考</div>
-                            <table class="print-table">
-                                <tr><th>通勤片道時間</th><td>${formatValueWithUnit(data.commute_time, '分')}</td></tr>
-                                <tr><th>お弁当/食堂</th><td>${formatValue(data.lunch_pref)}</td></tr>
-                                <tr><th>特記事項</th><td>${formatMultiline(data.ocr_note)}</td></tr>
-                            </table>
-                        </section>
-
-                        <section class="print-section full-width">
-                            <div class="print-section-title">保有資格・経験作業</div>
-                            <table class="print-table" style="margin-bottom: 4mm;">
-                                <tr><th>有資格</th><td>${formatMultiline(data.qualifications)}</td></tr>
-                            </table>
-                            <div class="print-tags">${experiencesTags}</div>
-                        </section>
-                    </div>
-
-                    <section class="print-section" style="margin-bottom: 8mm;">
-                        <div class="print-section-title">職務経歴</div>
-                        <table class="print-table">
-                            <thead>
-                                <tr>
-                                    <th>期間</th>
-                                    <th>派遣元</th>
-                                    <th>派遣先</th>
-                                    <th>作業内容</th>
-                                    <th>退社理由</th>
+                                <tr style="height:24px;">
+                                    <td class="label-th">ローマ字</td>
+                                    <td class="value-td" colspan="3"></td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                ${jobRows || '<tr><td colspan="5" style="text-align: center;" class="print-muted">職務経歴の登録はありません</td></tr>'}
-                            </tbody>
-                        </table>
-                    </section>
-
-                    <section class="print-section">
-                        <div class="print-section-title">家族構成</div>
-                        <table class="print-table">
-                            <thead>
-                                <tr>
-                                    <th>氏名</th>
-                                    <th>続柄</th>
-                                    <th>生年月日</th>
-                                    <th>年齢</th>
-                                    <th>居住</th>
-                                    <th>扶養</th>
+                                <tr style="height:24px;">
+                                    <td class="label-th">生年月日</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.birthday, '')}　　年齢 ${formatValue(data.age, '')} 歳</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                ${familyRows || '<tr><td colspan="6" style="text-align: center;" class="print-muted">家族構成の登録はありません</td></tr>'}
-                            </tbody>
-                        </table>
-                    </section>
-                </div>
+                                <tr style="height:24px;">
+                                    <td class="label-th">国籍</td>
+                                    <td class="value-td">${formatValue(data.nationality, '')}</td>
+                                    <td class="label-th">電話番号</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.phone, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">郵便番号</td>
+                                    <td class="value-td">${formatValue(data.postal_code, '')}</td>
+                                    <td class="label-th">携帯電話</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.mobile, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">住所</td>
+                                    <td class="value-td" colspan="5">${formatValue(data.address, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">緊急連絡先</td>
+                                    <td class="value-td">${formatValue(data.emergency_name, '')}</td>
+                                    <td class="label-th">続柄</td>
+                                    <td class="value-td">${formatValue(data.emergency_relation, '')}</td>
+                                    <td class="label-th">電話番号</td>
+                                    <td class="value-td">${formatValue(data.emergency_phone, '')}</td>
+                                </tr>
+                            </table>
+                        </td>
+
+                        <!-- Right Section: Japanese Skills -->
+                        <td colspan="4" style="vertical-align:top; padding:0;">
+                            <table class="nested-table" style="width:100%; height:100%;">
+                                <tr style="height:24px;">
+                                    <td class="label-th" style="width:15%;">聞く</td>
+                                    <td class="value-td" colspan="3" style="font-size:7pt;">
+                                        ${jpSkillCheck(data.listen_level, '初級')} 初級（挨拶程度）
+                                        ${jpSkillCheck(data.listen_level, '中級')} 中級（日常会話・就職可）
+                                        ${jpSkillCheck(data.listen_level, '上級')} 上級（通訳可）
+                                    </td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">話す</td>
+                                    <td class="value-td" colspan="3" style="font-size:7pt;">
+                                        ${jpSkillCheck(data.speak_level, '初級')} 初級（挨拶程度）
+                                        ${jpSkillCheck(data.speak_level, '中級')} 中級（日常会話・就職可）
+                                        ${jpSkillCheck(data.speak_level, '上級')} 上級（通訳可）
+                                    </td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">読む</td>
+                                    <td class="value-td" style="width:28%;">カナ　ひら　漢字</td>
+                                    <td class="label-th" style="width:15%;">書く</td>
+                                    <td class="value-td" style="width:28%;">カナ　ひら　漢字</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="2">最終学歴</td>
+                                    <td class="label-th">専攻</td>
+                                    <td class="value-td">${formatValue(data.major, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="4">有資格取得</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="value-td" colspan="4">${formatValue(data.qualifications, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="4">語学スキル有無</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="2">日本語能力資格</td>
+                                    <td class="label-th" colspan="2">能力試験受験受験予定</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="2">簡易抗原検査結果</td>
+                                    <td class="label-th" colspan="2">簡易抗原検査実施日</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="4">コロナワクチン予防接種状態</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Document Section -->
+                    <tr>
+                        <td class="header-th" colspan="10" style="text-align:center; font-weight:bold;">書類関係</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th" style="width:10%;">ビザ種類</td>
+                        <td class="value-td" style="width:15%;">${formatValue(data.visa_type, '')}</td>
+                        <td class="label-th" style="width:10%;">自動車所有</td>
+                        <td class="value-td" style="width:8%;">${formatValue(data.car_owner, '')}</td>
+                        <td class="label-th" rowspan="3" colspan="2" style="width:15%;">運転免許種類<br>及び条件</td>
+                        <td class="value-td" rowspan="3" colspan="4">${formatValue(data.license_type, '')}</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th">ビザ期間</td>
+                        <td class="value-td">${formatValue(data.visa_period, '')}</td>
+                        <td class="label-th">任意保険加入</td>
+                        <td class="value-td">${formatValue(data.insurance, '')}</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th">在留カード番号</td>
+                        <td class="value-td" colspan="3">${formatValue(data.residence_card_no, '')}</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th">パスポート番号</td>
+                        <td class="value-td" colspan="3">${formatValue(data.passport_no, '')}</td>
+                        <td class="label-th">運転免許番号</td>
+                        <td class="value-td" colspan="5">${formatValue(data.license_no, '')}</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th">パスポート期限</td>
+                        <td class="value-td" colspan="3">${formatValue(data.passport_expiry, '')}</td>
+                        <td class="label-th">運転免許期限</td>
+                        <td class="value-td" colspan="5">${formatValue(data.license_expiry, '')}</td>
+                    </tr>
+
+                    <!-- Body Info -->
+                    <tr>
+                        <td class="header-th" colspan="10" style="text-align:center; font-weight:bold;">身体情報　寸法</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th">身長</td>
+                        <td class="value-td">${formatValue(data.height, '')}</td>
+                        <td class="label-th">靴サイズ</td>
+                        <td class="value-td">${formatValue(data.shoe_size, '')}</td>
+                        <td class="label-th">利き腕</td>
+                        <td class="value-td">${formatValue(data.dominant_arm, '')}</td>
+                        <td class="label-th" rowspan="6" colspan="2" style="vertical-align:top;">職歴</td>
+                        <td class="value-td" rowspan="6" colspan="2">${jobRows}</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th">体重</td>
+                        <td class="value-td">${formatValue(data.weight, '')}</td>
+                        <td class="label-th">服のサイズ</td>
+                        <td class="value-td">${formatValue(data.uniform_size, '')}</td>
+                        <td class="label-th">血液型</td>
+                        <td class="value-td">${formatValue(data.blood_type, '')}</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th">ウエスト</td>
+                        <td class="value-td">${formatValue(data.waist, '')}</td>
+                        <td class="label-th">安全靴</td>
+                        <td class="value-td">${formatValue(data.safety_shoes, '')}</td>
+                        <td class="label-th">アレルギー有無</td>
+                        <td class="value-td">${formatValue(data.allergy, '')}</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th" colspan="4">眼（メガネ、コンタクト使用）</td>
+                        <td class="value-td" colspan="2">${formatValue(data.glasses, '')}</td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th" colspan="2">お弁当（社内食堂）</td>
+                        <td class="value-td" colspan="4" style="font-size:7pt;">
+                            ${yesNoCheck(data.lunch_pref, '昼/夜')} 昼/夜
+                            ${yesNoCheck(data.lunch_pref, '昼のみ')} 昼のみ
+                            ${yesNoCheck(data.lunch_pref, '夜のみ')} 夜のみ
+                            ${yesNoCheck(data.lunch_pref, '持参')} 持参
+                        </td>
+                    </tr>
+                    <tr style="height:24px;">
+                        <td class="label-th" colspan="2">通勤片道時間</td>
+                        <td class="value-td" colspan="4">${formatValue(data.commute_time, '')} 分</td>
+                    </tr>
+
+                    <!-- Family -->
+                    <tr>
+                        <td class="header-th" colspan="6" style="text-align:center; font-weight:bold;">家族構成</td>
+                        <td class="label-th">氏名</td>
+                        <td class="label-th">続柄</td>
+                        <td class="label-th">年齢</td>
+                        <td class="label-th">配偶者</td>
+                    </tr>
+                    ${familyRows.join('')}
+
+                    <!-- Experience -->
+                    <tr>
+                        <td class="header-th" colspan="10" style="text-align:center; font-weight:bold;">経験作業内容</td>
+                    </tr>
+                    <tr>
+                        <td colspan="10" class="value-td" style="padding:6px; font-size:7pt; line-height:1.6;">
+                            ${experiencesHTML}
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td colspan="8" style="text-align:right; padding:8px; position:relative;">
+                            <div style="display:inline-block; text-align:left;">
+                                <div style="font-size:11pt; font-weight:bold; margin-bottom:4px;">ユニバーサル企画株式会社</div>
+                                <div style="font-size:8pt;">TEL　052-938-8840　FAX　052-938-8841</div>
+                            </div>
+                        </td>
+                        <td class="label-th" style="text-align:center;">ID</td>
+                        <td class="value-td" style="text-align:center;">${formatValue(data.applicant_id, '')}</td>
+                    </tr>
+                </table>
+            </div>
             `;
         }
 

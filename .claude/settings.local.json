@@ -42,7 +42,11 @@
       "Bash(code --list-extensions)",
       "Bash(taskkill:*)",
       "Bash(code .)",
-      "Bash(START.bat)"
+      "Bash(START.bat)",
+      "Bash(git ls-tree:*)",
+      "Bash(del frontendsrccomponentsskeletonsindex.tsx)",
+      "Bash(rm:*)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []

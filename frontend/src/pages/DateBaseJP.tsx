@@ -43,8 +43,8 @@ const DateBaseJP: React.FC = () => {
   const [editingCell, setEditingCell] = useState<{rowIndex: number; columnName: string} | null>(null);
   const [editValue, setEditValue] = useState('');
   const [showCreateTable, setShowCreateTable] = useState(false);
-
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState(20);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetchTables();
@@ -54,7 +54,7 @@ const DateBaseJP: React.FC = () => {
     if (selectedTable) {
       fetchTableData(selectedTable, currentPage);
     }
-  }, [selectedTable, currentPage]);
+  }, [selectedTable, currentPage, pageSize, showAll]);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
@@ -90,8 +90,9 @@ const DateBaseJP: React.FC = () => {
   const fetchTableData = async (tableName: string, page: number) => {
     try {
       setLoading(true);
-      const offset = (page - 1) * pageSize;
-      const response = await fetch(`/api/database/tables/${tableName}/data?limit=${pageSize}&offset=${offset}&search=${searchTerm}`, {
+      const actualPageSize = showAll ? 10000 : pageSize;
+      const offset = showAll ? 0 : (page - 1) * pageSize;
+      const response = await fetch(`/api/database/tables/${tableName}/data?limit=${actualPageSize}&offset=${offset}&search=${searchTerm}`, {
         headers: getAuthHeaders()
       });
       if (!response.ok) throw new Error('Failed to fetch table data');
@@ -103,6 +104,17 @@ const DateBaseJP: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageSizeChange = (newSize: number | 'all') => {
+    if (newSize === 'all') {
+      setShowAll(true);
+      setPageSize(10000); // Número grande para "todos"
+    } else {
+      setShowAll(false);
+      setPageSize(newSize);
+    }
+    setCurrentPage(1);
   };
 
   const handleExportTable = async (tableName: string) => {
@@ -217,7 +229,7 @@ const DateBaseJP: React.FC = () => {
     }
   };
 
-  const totalPages = tableData ? Math.ceil(tableData.totalCount / pageSize) : 0;
+  const totalPages = tableData ? Math.ceil(tableData.totalCount / (showAll ? 10000 : pageSize)) : 0;
 
   return (
     <div className="space-y-6">
@@ -296,6 +308,22 @@ const DateBaseJP: React.FC = () => {
                   className="search-input"
                   aria-label="検索"
                 />
+              </div>
+              
+              {/* Page Size Selector */}
+              <div className="page-size-selector">
+                <label className="page-size-label">表示件数:</label>
+                <select
+                  value={showAll ? 'all' : pageSize}
+                  onChange={(e) => handlePageSizeChange(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+                  className="page-size-select"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value="all">すべて</option>
+                </select>
               </div>
               
               {/* Import */}
@@ -390,7 +418,7 @@ const DateBaseJP: React.FC = () => {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
+              {!showAll && totalPages > 1 && (
                 <div className="pagination-container">
                   <div className="pagination-info">
                     全 {tableData.totalCount} 件中 {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, tableData.totalCount)} 件を表示
@@ -414,6 +442,21 @@ const DateBaseJP: React.FC = () => {
                       次へ
                     </button>
                   </div>
+                </div>
+              )}
+              
+              {/* Show All Info */}
+              {showAll && (
+                <div className="show-all-info">
+                  <div className="pagination-info">
+                    全 {tableData.totalCount} 件を表示中
+                  </div>
+                  <button
+                    onClick={() => handlePageSizeChange(20)}
+                    className="pagination-button"
+                  >
+                    ページネーションに戻る
+                  </button>
                 </div>
               )}
             </>

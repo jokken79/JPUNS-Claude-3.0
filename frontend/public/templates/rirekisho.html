@@ -1456,190 +1456,298 @@
 
             // Helper to generate checkboxes for Japanese skills
             const jpSkillCheck = (level, value) => {
-                return level === value ? '☑' : '☐';
+                return level === value ? '●' : '○';
             };
 
             // Helper for simple yes/no radio buttons
             const yesNoCheck = (value, target) => {
-                return value === target ? '☑' : '☐';
+                return value === target ? '■' : '□';
             };
-            
+
             const experiences = [
-                "NC旋盤", "旋盤", "プレス", "フォークリフト", "梱包", "溶接", 
-                "車部品組立", "車部品ライン", "車部品検査", "電子部品検査", 
-                "食品加工", "鋳造", "塗装", "ラインリーダー", "その他"
+                {name: "NC旋盤", key: "NC旋盤"},
+                {name: "旋盤", key: "旋盤"},
+                {name: "プレス", key: "プレス"},
+                {name: "フォークリフト", key: "フォークリフト"},
+                {name: "梱包", key: "梱包"},
+                {name: "溶接", key: "溶接"},
+                {name: "車部品組立", key: "車部品組立"},
+                {name: "車部品ライン", key: "車部品ライン"},
+                {name: "車部品検査", key: "車部品検査"},
+                {name: "電子部品検査", key: "電子部品検査"},
+                {name: "食品加工", key: "食品加工"},
+                {name: "鋳造", key: "鋳造"},
+                {name: "塗装", key: "塗装"},
+                {name: "ラインリーダー", key: "ラインリーダー"},
+                {name: "その他", key: "その他"}
             ];
 
             const experiencesHTML = experiences.map(exp => {
-                const isChecked = data.experiences.includes(exp);
-                return `<div class="checkbox-item">${exp}: <span class="checkbox-box">${isChecked ? '✔' : ''}</span></div>`;
+                const isChecked = data.experiences.includes(exp.key);
+                return `<span style="display:inline-block; margin-right:8px;">${isChecked ? '■' : '□'} ${exp.name}</span>`;
             }).join('');
 
             const jobRows = (data.jobHistory || [])
                 .filter(job => [job.start, job.end, job.hakenmoto, job.hakensaki, job.content].some(field => (field ?? '').toString().trim()))
                 .map(job => `
                     <tr>
-                        <td class="value-td">${formatPeriod(job.start, job.end)}</td>
-                        <td class="value-td">${formatValue(job.hakenmoto)}</td>
-                        <td class="value-td">${formatValue(job.hakensaki)}</td>
-                        <td class="value-td">${formatValue(job.content)}</td>
-                    </tr>
-                `).join('');
-            
-            const familyRows = (data.familyMembers || [])
-                .filter(member => [member.name, member.relation, member.birthday, member.age, member.residence].some(field => (field ?? '').toString().trim()))
-                .map(member => `
-                    <tr>
-                        <td class="value-td">${formatValue(member.name)}</td>
-                        <td class="value-td">${formatValue(member.relation)}</td>
-                        <td class="value-td">${formatValue(member.age)}</td>
-                        <td class="value-td">${formatValue(member.residence)}</td>
-                        <td class="value-td">${formatValue(member.dependent)}</td>
+                        <td class="value-td" colspan="2">${formatPeriod(job.start, job.end)}</td>
                     </tr>
                 `).join('');
 
+            // Generar al menos 6 filas de familia vacías si no hay datos
+            const familyData = data.familyMembers || [];
+            const minFamilyRows = 6;
+            const familyRows = [];
+
+            for (let i = 0; i < minFamilyRows; i++) {
+                const member = familyData[i] || {};
+                familyRows.push(`
+                    <tr>
+                        <td class="value-td">${formatValue(member.name, '')}</td>
+                        <td class="value-td">${formatValue(member.relation, '')}</td>
+                        <td class="value-td">${formatValue(member.age, '')}</td>
+                        <td class="value-td">${formatValue(member.residence, '')}</td>
+                        <td class="value-td">${formatValue(member.dependent, '')}</td>
+                    </tr>
+                `);
+            }
+
             return `
             <div class="new-print-page">
-                <table class="rirekisho-table">
-                    <!-- Main Header -->
+                <table class="rirekisho-table" style="width:100%; font-size:8pt;">
+                    <!-- Header -->
                     <tr>
-                        <td colspan="10" class="header-th" style="font-size: 16pt; padding: 8px;">履歴書</td>
+                        <td colspan="6" class="header-th" style="font-size:14pt; font-weight:bold; text-align:center; padding:6px;">履歴書</td>
+                        <td colspan="4" class="header-th" style="font-size:11pt; font-weight:bold; text-align:center;">日本語能力</td>
                     </tr>
-                    <!-- Personal Info and Japanese Skills -->
+
+                    <!-- Main Row: Personal Info (Left) + Japanese Skills (Right) -->
                     <tr>
-                        <td colspan="6" style="vertical-align: top; padding:0;">
-                            <!-- Personal Info Table -->
-                            <table class="nested-table">
-                                <tr><td class="label-th">受付日</td><td class="value-td" colspan="2"></td><td class="label-th">来日</td><td class="value-td" colspan="2"></td></tr>
-                                <tr><td class="label-th">フリガナ</td><td class="value-td" colspan="3">${formatValue(data.name_furigana)}</td><td class="label-th">性別</td><td class="value-td">${formatValue(data.gender)}</td></tr>
-                                <tr><td class="label-th">氏名</td><td class="value-td" colspan="3">${formatValue(data.name_kanji)}</td><td rowspan="3" class="photo-cell"><img src="${data.photo}" alt="Photo"></td></tr>
-                                <tr><td class="label-th">ローマ字</td><td class="value-td" colspan="3"></td></tr>
-                                <tr><td class="label-th">生年月日</td><td class="value-td" colspan="3">${formatValue(data.birthday)} (満 ${formatValue(data.age)} 歳)</td></tr>
-                                <tr><td class="label-th">国籍</td><td class="value-td">${formatValue(data.nationality)}</td><td class="label-th">電話番号</td><td class="value-td">${formatValue(data.phone)}</td><td class="label-th" colspan="2"></td></tr>
-                                <tr><td class="label-th">郵便番号</td><td class="value-td">${formatValue(data.postal_code)}</td><td class="label-th">携帯電話</td><td class="value-td">${formatValue(data.mobile)}</td><td class="label-th" colspan="2"></td></tr>
-                                <tr><td class="label-th">住所</td><td class="value-td" colspan="5">${formatValue(data.address)}</td></tr>
-                                <tr><td class="label-th">緊急連絡先</td><td class="value-td">${formatValue(data.emergency_name)}</td><td class="label-th">続柄</td><td class="value-td">${formatValue(data.emergency_relation)}</td><td class="label-th">電話番号</td><td class="value-td">${formatValue(data.emergency_phone)}</td></tr>
-                            </table>
-                        </td>
-                        <td colspan="4" style="vertical-align: top; padding:0;">
-                            <!-- Skills Table -->
-                            <table class="nested-table">
-                                <tr><td class="header-th" colspan="4">日本語能力</td></tr>
-                                <tr>
-                                    <td class="label-th">聞く</td>
-                                    <td class="value-td" colspan="3">
-                                        ${jpSkillCheck(data.listen_level, '初級')}初級(挨拶程度)
-                                        ${jpSkillCheck(data.listen_level, '中級')}中級(日常会話・就職可)
-                                        ${jpSkillCheck(data.listen_level, '上級')}上級(通訳可)
+                        <!-- Left Section: Personal Info -->
+                        <td colspan="6" style="vertical-align:top; padding:0;">
+                            <table class="nested-table" style="width:100%; height:100%;">
+                                <tr style="height:24px;">
+                                    <td class="label-th" style="width:15%;">受付日</td>
+                                    <td class="value-td" style="width:18%;"></td>
+                                    <td class="label-th" style="width:15%;">来日</td>
+                                    <td class="value-td" colspan="3"></td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">フリガナ</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.name_furigana, '')}</td>
+                                    <td class="label-th" style="width:12%;">性別</td>
+                                    <td class="value-td" style="width:12%;">${formatValue(data.gender, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">氏名</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.name_kanji, '')}</td>
+                                    <td rowspan="3" colspan="2" class="photo-cell" style="width:120px; height:140px; text-align:center; vertical-align:middle; border:1px solid #000;">
+                                        ${data.photo ? `<img src="${data.photo}" style="max-width:115px; max-height:135px; object-fit:contain;">` : ''}
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">ローマ字</td>
+                                    <td class="value-td" colspan="3"></td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">生年月日</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.birthday, '')}　　年齢 ${formatValue(data.age, '')} 歳</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">国籍</td>
+                                    <td class="value-td">${formatValue(data.nationality, '')}</td>
+                                    <td class="label-th">電話番号</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.phone, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">郵便番号</td>
+                                    <td class="value-td">${formatValue(data.postal_code, '')}</td>
+                                    <td class="label-th">携帯電話</td>
+                                    <td class="value-td" colspan="3">${formatValue(data.mobile, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">住所</td>
+                                    <td class="value-td" colspan="5">${formatValue(data.address, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">緊急連絡先</td>
+                                    <td class="value-td">${formatValue(data.emergency_name, '')}</td>
+                                    <td class="label-th">続柄</td>
+                                    <td class="value-td">${formatValue(data.emergency_relation, '')}</td>
+                                    <td class="label-th">電話番号</td>
+                                    <td class="value-td">${formatValue(data.emergency_phone, '')}</td>
+                                </tr>
+                            </table>
+                        </td>
+
+                        <!-- Right Section: Japanese Skills -->
+                        <td colspan="4" style="vertical-align:top; padding:0;">
+                            <table class="nested-table" style="width:100%; height:100%;">
+                                <tr style="height:24px;">
+                                    <td class="label-th" style="width:15%;">聞く</td>
+                                    <td class="value-td" colspan="3" style="font-size:7pt;">
+                                        ${jpSkillCheck(data.listen_level, '初級')} 初級（挨拶程度）
+                                        ${jpSkillCheck(data.listen_level, '中級')} 中級（日常会話・就職可）
+                                        ${jpSkillCheck(data.listen_level, '上級')} 上級（通訳可）
+                                    </td>
+                                </tr>
+                                <tr style="height:24px;">
                                     <td class="label-th">話す</td>
-                                    <td class="value-td" colspan="3">
-                                        ${jpSkillCheck(data.speak_level, '初級')}初級(挨拶程度)
-                                        ${jpSkillCheck(data.speak_level, '中級')}中級(日常会話・就職可)
-                                        ${jpSkillCheck(data.speak_level, '上級')}上級(通訳可)
+                                    <td class="value-td" colspan="3" style="font-size:7pt;">
+                                        ${jpSkillCheck(data.speak_level, '初級')} 初級（挨拶程度）
+                                        ${jpSkillCheck(data.speak_level, '中級')} 中級（日常会話・就職可）
+                                        ${jpSkillCheck(data.speak_level, '上級')} 上級（通訳可）
                                     </td>
                                 </tr>
-                                <tr><td class="label-th">読む</td><td class="value-td">カナ ${yesNoCheck(data.kana_read, 'できない')}書けない</td><td class="value-td">ひら ${yesNoCheck(data.kana_read, 'できない')}書けない</td><td class="value-td">漢字 ${yesNoCheck(data.kanji_level, 'できない')}書けない</td></tr>
-                                <tr><td class="label-th">書く</td><td class="value-td">カナ ${yesNoCheck(data.kana_write, 'できない')}書けない</td><td class="value-td">ひら ${yesNoCheck(data.kana_write, 'できない')}書けない</td><td class="value-td">漢字 ${yesNoCheck(data.kanji_level, 'できない')}書けない</td></tr>
-                                <tr><td class="label-th">最終学歴</td><td class="value-td">${formatValue(data.education)}</td><td class="label-th">専攻</td><td class="value-td">${formatValue(data.major)}</td></tr>
-                                <tr><td class="label-th" colspan="2">有資格取得</td><td class="value-td" colspan="2">${formatValue(data.qualifications)}</td></tr>
-                                <tr><td class="label-th" colspan="2">語学スキル有無</td><td class="value-td" colspan="2"></td></tr>
-                                <tr><td class="label-th" colspan="2">日本語能力資格</td><td class="value-td" colspan="2"></td></tr>
-                                <tr><td class="label-th" colspan="2">能力試験受験</td><td class="value-td" colspan="2"></td></tr>
-                                <tr><td class="label-th" colspan="2">簡易抗原検査結果</td><td class="value-td" colspan="2"></td></tr>
-                                <tr><td class="label-th" colspan="2">コロナワクチン予防接種状態</td><td class="value-td" colspan="2">${formatValue(data.vaccine)}</td></tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th">読む</td>
+                                    <td class="value-td" style="width:28%;">カナ　ひら　漢字</td>
+                                    <td class="label-th" style="width:15%;">書く</td>
+                                    <td class="value-td" style="width:28%;">カナ　ひら　漢字</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="2">最終学歴</td>
+                                    <td class="label-th">専攻</td>
+                                    <td class="value-td">${formatValue(data.major, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="4">有資格取得</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="value-td" colspan="4">${formatValue(data.qualifications, '')}</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="4">語学スキル有無</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="2">日本語能力資格</td>
+                                    <td class="label-th" colspan="2">能力試験受験受験予定</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="2">簡易抗原検査結果</td>
+                                    <td class="label-th" colspan="2">簡易抗原検査実施日</td>
+                                </tr>
+                                <tr style="height:24px;">
+                                    <td class="label-th" colspan="4">コロナワクチン予防接種状態</td>
+                                </tr>
                             </table>
                         </td>
                     </tr>
-                    <!-- Document Info -->
+
+                    <!-- Document Section -->
                     <tr>
-                        <td class="header-th" colspan="10">書類関係</td>
+                        <td class="header-th" colspan="10" style="text-align:center; font-weight:bold;">書類関係</td>
                     </tr>
-                    <tr>
-                        <td class="label-th">ビザ種類</td><td class="value-td" colspan="2">${formatValue(data.visa_type)}</td>
-                        <td class="label-th">自動車所有</td><td class="value-td">${formatValue(data.car_owner)}</td>
-                        <td class="label-th" rowspan="3">運転免許種類及び条件</td><td class="value-td" rowspan="3" colspan="4">${formatValue(data.license_type)}</td>
+                    <tr style="height:24px;">
+                        <td class="label-th" style="width:10%;">ビザ種類</td>
+                        <td class="value-td" style="width:15%;">${formatValue(data.visa_type, '')}</td>
+                        <td class="label-th" style="width:10%;">自動車所有</td>
+                        <td class="value-td" style="width:8%;">${formatValue(data.car_owner, '')}</td>
+                        <td class="label-th" rowspan="3" colspan="2" style="width:15%;">運転免許種類<br>及び条件</td>
+                        <td class="value-td" rowspan="3" colspan="4">${formatValue(data.license_type, '')}</td>
                     </tr>
-                    <tr>
-                        <td class="label-th">ビザ期間</td><td class="value-td" colspan="2">${formatValue(data.visa_period)}</td>
-                        <td class="label-th">任意保険加入</td><td class="value-td">${formatValue(data.insurance)}</td>
+                    <tr style="height:24px;">
+                        <td class="label-th">ビザ期間</td>
+                        <td class="value-td">${formatValue(data.visa_period, '')}</td>
+                        <td class="label-th">任意保険加入</td>
+                        <td class="value-td">${formatValue(data.insurance, '')}</td>
                     </tr>
-                    <tr>
-                        <td class="label-th">在留カード番号</td><td class="value-td" colspan="4">${formatValue(data.residence_card_no)}</td>
+                    <tr style="height:24px;">
+                        <td class="label-th">在留カード番号</td>
+                        <td class="value-td" colspan="3">${formatValue(data.residence_card_no, '')}</td>
                     </tr>
-                     <tr>
-                        <td class="label-th">パスポート番号</td><td class="value-td" colspan="2">${formatValue(data.passport_no)}</td>
-                        <td class="label-th">運転免許番号</td><td class="value-td" colspan="2">${formatValue(data.license_no)}</td>
-                        <td class="label-th" rowspan="2">運転免許期限</td><td class="value-td" rowspan="2" colspan="3">${formatValue(data.license_expiry)}</td>
+                    <tr style="height:24px;">
+                        <td class="label-th">パスポート番号</td>
+                        <td class="value-td" colspan="3">${formatValue(data.passport_no, '')}</td>
+                        <td class="label-th">運転免許番号</td>
+                        <td class="value-td" colspan="5">${formatValue(data.license_no, '')}</td>
                     </tr>
-                    <tr>
-                        <td class="label-th">パスポート期限</td><td class="value-td" colspan="4">${formatValue(data.passport_expiry)}</td>
+                    <tr style="height:24px;">
+                        <td class="label-th">パスポート期限</td>
+                        <td class="value-td" colspan="3">${formatValue(data.passport_expiry, '')}</td>
+                        <td class="label-th">運転免許期限</td>
+                        <td class="value-td" colspan="5">${formatValue(data.license_expiry, '')}</td>
                     </tr>
 
                     <!-- Body Info -->
                     <tr>
-                        <td class="header-th" colspan="10">身体情報・寸法</td>
+                        <td class="header-th" colspan="10" style="text-align:center; font-weight:bold;">身体情報　寸法</td>
                     </tr>
-                    <tr>
-                        <td class="label-th">身長</td><td class="value-td">${formatValueWithUnit(data.height, 'cm')}</td>
-                        <td class="label-th">体重</td><td class="value-td">${formatValueWithUnit(data.weight, 'kg')}</td>
-                        <td class="label-th">靴サイズ</td><td class="value-td">${formatValueWithUnit(data.shoe_size, 'cm')}</td>
-                        <td class="label-th">利き腕</td><td class="value-td">${formatValue(data.dominant_arm)}</td>
-                        <td class="label-th" rowspan="2">職歴</td><td class="value-td" rowspan="2"></td>
+                    <tr style="height:24px;">
+                        <td class="label-th">身長</td>
+                        <td class="value-td">${formatValue(data.height, '')}</td>
+                        <td class="label-th">靴サイズ</td>
+                        <td class="value-td">${formatValue(data.shoe_size, '')}</td>
+                        <td class="label-th">利き腕</td>
+                        <td class="value-td">${formatValue(data.dominant_arm, '')}</td>
+                        <td class="label-th" rowspan="6" colspan="2" style="vertical-align:top;">職歴</td>
+                        <td class="value-td" rowspan="6" colspan="2">${jobRows}</td>
                     </tr>
-                    <tr>
-                        <td class="label-th">服のサイズ</td><td class="value-td">${formatValue(data.uniform_size)}</td>
-                        <td class="label-th">ウエスト</td><td class="value-td">${formatValueWithUnit(data.waist, 'cm')}</td>
-                        <td class="label-th">安全靴</td><td class="value-td">${formatValue(data.safety_shoes)}</td>
-                        <td class="label-th">血液型</td><td class="value-td">${formatValue(data.blood_type)}</td>
+                    <tr style="height:24px;">
+                        <td class="label-th">体重</td>
+                        <td class="value-td">${formatValue(data.weight, '')}</td>
+                        <td class="label-th">服のサイズ</td>
+                        <td class="value-td">${formatValue(data.uniform_size, '')}</td>
+                        <td class="label-th">血液型</td>
+                        <td class="value-td">${formatValue(data.blood_type, '')}</td>
                     </tr>
-                    <tr>
-                        <td class="label-th">アレルギー有無</td><td class="value-td">${formatValue(data.allergy)}</td>
-                        <td class="label-th" colspan="2">眼（メガネ・コンタクト使用）</td><td class="value-td" colspan="4">${formatValue(data.glasses)}</td>
+                    <tr style="height:24px;">
+                        <td class="label-th">ウエスト</td>
+                        <td class="value-td">${formatValue(data.waist, '')}</td>
+                        <td class="label-th">安全靴</td>
+                        <td class="value-td">${formatValue(data.safety_shoes, '')}</td>
+                        <td class="label-th">アレルギー有無</td>
+                        <td class="value-td">${formatValue(data.allergy, '')}</td>
                     </tr>
-
-                    <!-- Preferences & Family -->
-                    <tr>
-                        <td class="label-th">お弁当(社内食堂)</td>
-                        <td class="value-td" colspan="3">
-                            ${yesNoCheck(data.lunch_pref, '昼/夜')}昼/夜
-                            ${yesNoCheck(data.lunch_pref, '昼のみ')}昼のみ
-                            ${yesNoCheck(data.lunch_pref, '夜のみ')}夜のみ
-                            ${yesNoCheck(data.lunch_pref, '持参')}持参
-                        </td>
-                        <td class="label-th">通勤片道時間</td>
-                        <td class="value-td">${formatValueWithUnit(data.commute_time, '分')}</td>
-                        <td class="header-th" colspan="4">家族構成</td>
+                    <tr style="height:24px;">
+                        <td class="label-th" colspan="4">眼（メガネ、コンタクト使用）</td>
+                        <td class="value-td" colspan="2">${formatValue(data.glasses, '')}</td>
                     </tr>
-                    <tr>
-                        <td class="label-th">氏名</td><td class="value-td"></td>
-                        <td class="label-th">続柄</td><td class="value-td"></td>
-                        <td class="label-th">年齢</td><td class="value-td"></td>
-                        <td class="label-th">配偶者</td><td class="value-td"></td>
-                        <td class="label-th">居住</td><td class="value-td"></td>
-                    </tr>
-                    ${familyRows}
-
-                    <!-- Work Experience -->
-                    <tr>
-                        <td class="header-th" colspan="10">経験作業内容</td>
-                    </tr>
-                    <tr>
-                        <td colspan="10" class="value-td">
-                            <div class="checkbox-group">${experiencesHTML}</div>
+                    <tr style="height:24px;">
+                        <td class="label-th" colspan="2">お弁当（社内食堂）</td>
+                        <td class="value-td" colspan="4" style="font-size:7pt;">
+                            ${yesNoCheck(data.lunch_pref, '昼/夜')} 昼/夜
+                            ${yesNoCheck(data.lunch_pref, '昼のみ')} 昼のみ
+                            ${yesNoCheck(data.lunch_pref, '夜のみ')} 夜のみ
+                            ${yesNoCheck(data.lunch_pref, '持参')} 持参
                         </td>
                     </tr>
-                    
+                    <tr style="height:24px;">
+                        <td class="label-th" colspan="2">通勤片道時間</td>
+                        <td class="value-td" colspan="4">${formatValue(data.commute_time, '')} 分</td>
+                    </tr>
+
+                    <!-- Family -->
+                    <tr>
+                        <td class="header-th" colspan="6" style="text-align:center; font-weight:bold;">家族構成</td>
+                        <td class="label-th">氏名</td>
+                        <td class="label-th">続柄</td>
+                        <td class="label-th">年齢</td>
+                        <td class="label-th">配偶者</td>
+                    </tr>
+                    ${familyRows.join('')}
+
+                    <!-- Experience -->
+                    <tr>
+                        <td class="header-th" colspan="10" style="text-align:center; font-weight:bold;">経験作業内容</td>
+                    </tr>
+                    <tr>
+                        <td colspan="10" class="value-td" style="padding:6px; font-size:7pt; line-height:1.6;">
+                            ${experiencesHTML}
+                        </td>
+                    </tr>
+
                     <!-- Footer -->
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 10px;">
-                            <img src="/uns-logo.gif" alt="UNS Logo" style="height: 40px; display: inline-block; vertical-align: middle; margin-right: 20px;">
-                            <span style="vertical-align: middle; font-size: 12pt; font-weight: bold;">ユニバーサル企画株式会社</span>
+                        <td colspan="8" style="text-align:right; padding:8px; position:relative;">
+                            <div style="display:inline-block; text-align:left;">
+                                <div style="font-size:11pt; font-weight:bold; margin-bottom:4px;">ユニバーサル企画株式会社</div>
+                                <div style="font-size:8pt;">TEL　052-938-8840　FAX　052-938-8841</div>
+                            </div>
                         </td>
-                        <td class="label-th">ID</td>
-                        <td class="value-td">${formatValue(data.applicant_id)}</td>
+                        <td class="label-th" style="text-align:center;">ID</td>
+                        <td class="value-td" style="text-align:center;">${formatValue(data.applicant_id, '')}</td>
                     </tr>
                 </table>
             </div>

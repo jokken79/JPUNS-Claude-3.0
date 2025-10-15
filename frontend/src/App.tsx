@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -80,171 +79,171 @@ function App() {
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="dashboard"
-                element={(
+                element={
                   <VisibilityGuard pageKey="dashboard">
                     <Dashboard />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="candidates"
-                element={(
+                element={
                   <VisibilityGuard pageKey="candidates">
                     <Candidates />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="candidates/list"
-                element={(
+                element={
                   <VisibilityGuard pageKey="candidates">
                     <CandidatesList />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="candidates/:id/edit"
-                element={(
+                element={
                   <VisibilityGuard pageKey="candidates">
                     <CandidateEdit />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="candidates/:id"
-                element={(
+                element={
                   <VisibilityGuard pageKey="candidates">
                     <CandidateEdit />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="candidates/:id/print"
-                element={(
+                element={
                   <ProtectedRoute>
                     <RirekishoPrintView />
                   </ProtectedRoute>
-                )}
+                }
               />
               <Route
                 path="candidates/:id/print-jp"
-                element={(
+                element={
                   <ProtectedRoute>
                     <RirekishoPrintViewJPModif />
                   </ProtectedRoute>
-                )}
+                }
               />
               <Route
                 path="candidates/:id/print-jp2"
-                element={(
+                element={
                   <ProtectedRoute>
                     <RirekishoPrintViewJPModif2 />
                   </ProtectedRoute>
-                )}
+                }
               />
               <Route
                 path="pending-approval"
-                element={(
+                element={
                   <VisibilityGuard pageKey="pendingApproval">
                     <PendingApproval />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="employees"
-                element={(
+                element={
                   <VisibilityGuard pageKey="employees">
                     <Employees />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="employees-extended"
-                element={(
+                element={
                   <VisibilityGuard pageKey="employeesExtended">
                     <EmployeesExtended />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="employees/new"
-                element={(
+                element={
                   <VisibilityGuard pageKey="employees">
                     <EmployeeForm />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="employees/:id"
-                element={(
+                element={
                   <VisibilityGuard pageKey="employees">
                     <EmployeeDetail />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="employees/:id/edit"
-                element={(
+                element={
                   <VisibilityGuard pageKey="employees">
                     <EmployeeForm />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="factories"
-                element={(
+                element={
                   <VisibilityGuard pageKey="factories">
                     <Factories />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="timer-cards"
-                element={(
+                element={
                   <VisibilityGuard pageKey="timerCards">
                     <TimerCards />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="salary"
-                element={(
+                element={
                   <VisibilityGuard pageKey="salary">
                     <Salary />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="requests"
-                element={(
+                element={
                   <VisibilityGuard pageKey="requests">
                     <Requests />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="import-data"
-                element={(
+                element={
                   <VisibilityGuard pageKey="importData">
                     <ImportData />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="database"
-                element={(
+                element={
                   <VisibilityGuard pageKey="database">
                     <DateBaseJP />
                   </VisibilityGuard>
-                )}
+                }
               />
               <Route
                 path="adminer"
-                element={(
+                element={
                   <VisibilityGuard pageKey="adminer">
                     <AdminerDBJP />
                   </VisibilityGuard>
-                )}
+                }
               />
             </Route>
 
