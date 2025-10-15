@@ -17,6 +17,16 @@ const availableThemes = {
   'theme-corporate': 'Corporativo UNS',
   'theme-smarthr': 'Estilo SmartHR',
   'theme-futuristic': 'Futurista',
+  'theme-ocean': 'Océano',
+  'theme-sunset': 'Atardecer',
+  'theme-forest': 'Bosque',
+  'theme-mint': 'Menta',
+  'theme-lavender': 'Lavanda',
+  'theme-monochrome': 'Monocromático',
+  'theme-coral': 'Coral',
+  'theme-earth': 'Tierra',
+  'theme-royal': 'Real',
+  'theme-sakura': 'Sakura',
 };
 
 // Create the provider component

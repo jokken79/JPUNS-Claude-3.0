@@ -1,0 +1,16 @@
+:root.theme-lavender {
+  --color-primary: #9370DB; /* Medium Purple */
+  --color-secondary: #8A2BE2; /* Blue Violet */
+  --color-accent: #BA55D3; /* Medium Orchid */
+  --color-background-base: #F8F8FF; /* Ghost White */
+  --color-background-muted: #E6E6FA; /* Lavender */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #483D8B; /* Dark Slate Blue */
+  --color-text-muted: #6A5ACD; /* Slate Blue */
+  --color-text-inverted: #FFFFFF; /* White */
+  --color-border-base: #D8BFD8; /* Thistle */
+  --color-border-muted: #E6E6FA; /* Lavender */
+  --color-success: #7B68EE; /* Medium Slate Blue */
+  --color-warning: #F0E68C; /* Khaki */
+  --color-danger: #C71585; /* Medium Violet Red */
+}

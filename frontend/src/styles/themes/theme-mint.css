@@ -1,0 +1,16 @@
+:root.theme-mint {
+  --color-primary: #66CDAA; /* Medium Aquamarine */
+  --color-secondary: #7FFFD4; /* Aquamarine */
+  --color-accent: #20B2AA; /* Light Sea Green */
+  --color-background-base: #F0FFF0; /* Honeydew */
+  --color-background-muted: #F5FFFA; /* Mint Cream */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #2F4F4F; /* Dark Slate Gray */
+  --color-text-muted: #5F9EA0; /* Cadet Blue */
+  --color-text-inverted: #000000; /* Black */
+  --color-border-base: #AFEEEE; /* Pale Turquoise */
+  --color-border-muted: #E0FFFF; /* Light Cyan */
+  --color-success: #3CB371; /* Medium Sea Green */
+  --color-warning: #FFD700; /* Gold */
+  --color-danger: #FF6347; /* Tomato */
+}

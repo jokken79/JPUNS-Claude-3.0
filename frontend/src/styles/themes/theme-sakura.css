@@ -1,0 +1,16 @@
+:root.theme-sakura {
+  --color-primary: #FFC0CB; /* Pink */
+  --color-secondary: #FFB6C1; /* Light Pink */
+  --color-accent: #DB7093; /* Pale Violet Red */
+  --color-background-base: #FFF5F5; /* Light Pink */
+  --color-background-muted: #FFFFFF; /* White */
+  --color-background-highlight: #FFF0F5; /* Lavender Blush */
+  --color-text-base: #8B0000; /* Dark Red */
+  --color-text-muted: #C71585; /* Medium Violet Red */
+  --color-text-inverted: #000000; /* Black */
+  --color-border-base: #FFD1DC; /* Light Pink Border */
+  --color-border-muted: #FFE4E1; /* Misty Rose Border */
+  --color-success: #98FB98; /* Pale Green */
+  --color-warning: #F0E68C; /* Khaki */
+  --color-danger: #B22222; /* Firebrick */
+}

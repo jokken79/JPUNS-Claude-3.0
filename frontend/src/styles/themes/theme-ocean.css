@@ -1,0 +1,16 @@
+:root.theme-ocean {
+  --color-primary: #0077B6; /* Deep Ocean Blue */
+  --color-secondary: #00B4D8; /* Lighter Ocean Blue */
+  --color-accent: #90E0EF; /* Sky Blue */
+  --color-background-base: #F0F8FF; /* Alice Blue */
+  --color-background-muted: #E0F2F7; /* Light Cyan */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #03045E; /* Navy */
+  --color-text-muted: #489FB5; /* Muted Teal */
+  --color-text-inverted: #FFFFFF; /* White */
+  --color-border-base: #BCE0EB; /* Light Blue Border */
+  --color-border-muted: #CAF0F8; /* Very Light Blue Border */
+  --color-success: #2A9D8F; /* Teal Green */
+  --color-warning: #E9C46A; /* Sandy Yellow */
+  --color-danger: #E76F51; /* Burnt Sienna */
+}

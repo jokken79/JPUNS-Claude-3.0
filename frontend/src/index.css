@@ -3,6 +3,16 @@
 @import "./styles/themes/theme-corporate.css";
 @import "./styles/themes/theme-smarthr.css";
 @import "./styles/themes/theme-futuristic.css";
+@import "./styles/themes/theme-ocean.css";
+@import "./styles/themes/theme-sunset.css";
+@import "./styles/themes/theme-forest.css";
+@import "./styles/themes/theme-mint.css";
+@import "./styles/themes/theme-lavender.css";
+@import "./styles/themes/theme-monochrome.css";
+@import "./styles/themes/theme-coral.css";
+@import "./styles/themes/theme-earth.css";
+@import "./styles/themes/theme-royal.css";
+@import "./styles/themes/theme-sakura.css";
 
 @tailwind base;
 @tailwind components;
@@ -45,6 +55,46 @@
 
 :root.theme-futuristic {
   /* Futuristic theme variables will override the base */
+}
+
+:root.theme-ocean {
+  /* Ocean theme variables will override the base */
+}
+
+:root.theme-sunset {
+  /* Sunset theme variables will override the base */
+}
+
+:root.theme-forest {
+  /* Forest theme variables will override the base */
+}
+
+:root.theme-mint {
+  /* Mint theme variables will override the base */
+}
+
+:root.theme-lavender {
+  /* Lavender theme variables will override the base */
+}
+
+:root.theme-monochrome {
+  /* Monochrome theme variables will override the base */
+}
+
+:root.theme-coral {
+  /* Coral theme variables will override the base */
+}
+
+:root.theme-earth {
+  /* Earth theme variables will override the base */
+}
+
+:root.theme-royal {
+  /* Royal theme variables will override the base */
+}
+
+:root.theme-sakura {
+  /* Sakura theme variables will override the base */
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&display=swap');

@@ -1,0 +1,16 @@
+:root.theme-earth {
+  --color-primary: #A0522D; /* Sienna */
+  --color-secondary: #8B4513; /* Saddle Brown */
+  --color-accent: #D2691E; /* Chocolate */
+  --color-background-base: #F5F5DC; /* Beige */
+  --color-background-muted: #FAF0E6; /* Linen */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #2F4F4F; /* Dark Slate Gray */
+  --color-text-muted: #808000; /* Olive */
+  --color-text-inverted: #FFFFFF; /* White */
+  --color-border-base: #CD853F; /* Peru */
+  --color-border-muted: #F5DEB3; /* Wheat */
+  --color-success: #556B2F; /* Dark Olive Green */
+  --color-warning: #DAA520; /* Goldenrod */
+  --color-danger: #A52A2A; /* Brown */
+}

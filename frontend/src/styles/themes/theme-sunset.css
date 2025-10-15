@@ -1,0 +1,16 @@
+:root.theme-sunset {
+  --color-primary: #F77754; /* Orange */
+  --color-secondary: #E13468; /* Hot Pink */
+  --color-accent: #8A2BE2; /* Blue Violet */
+  --color-background-base: #FFF5F5; /* Light Pink */
+  --color-background-muted: #FFE4E1; /* Misty Rose */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #4B0082; /* Indigo */
+  --color-text-muted: #6A5ACD; /* Slate Blue */
+  --color-text-inverted: #FFFFFF; /* White */
+  --color-border-base: #FFD1DC; /* Light Pink Border */
+  --color-border-muted: #FFE4E1; /* Misty Rose Border */
+  --color-success: #32CD32; /* Lime Green */
+  --color-warning: #FFD700; /* Gold */
+  --color-danger: #DC143C; /* Crimson */
+}

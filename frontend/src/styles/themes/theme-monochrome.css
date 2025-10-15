@@ -1,0 +1,16 @@
+:root.theme-monochrome {
+  --color-primary: #000000; /* Black */
+  --color-secondary: #434343; /* Gray */
+  --color-accent: #8C8C8C; /* Light Gray */
+  --color-background-base: #F5F5F5; /* Off White */
+  --color-background-muted: #E0E0E0; /* Lighter Gray */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #000000; /* Black */
+  --color-text-muted: #595959; /* Dark Gray */
+  --color-text-inverted: #FFFFFF; /* White */
+  --color-border-base: #D9D9D9; /* Light Gray Border */
+  --color-border-muted: #F0F0F0; /* Very Light Gray Border */
+  --color-success: #52C41A; /* Green */
+  --color-warning: #FAAD14; /* Yellow */
+  --color-danger: #F5222D; /* Red */
+}

@@ -1,0 +1,16 @@
+:root.theme-royal {
+  --color-primary: #4169E1; /* Royal Blue */
+  --color-secondary: #00008B; /* Dark Blue */
+  --color-accent: #FFD700; /* Gold */
+  --color-background-base: #F0F8FF; /* Alice Blue */
+  --color-background-muted: #E6E6FA; /* Lavender */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #000000; /* Black */
+  --color-text-muted: #6A5ACD; /* Slate Blue */
+  --color-text-inverted: #FFFFFF; /* White */
+  --color-border-base: #B0C4DE; /* Light Steel Blue */
+  --color-border-muted: #D8BFD8; /* Thistle */
+  --color-success: #228B22; /* Forest Green */
+  --color-warning: #FFA500; /* Orange */
+  --color-danger: #DC143C; /* Crimson */
+}

@@ -1,0 +1,16 @@
+:root.theme-coral {
+  --color-primary: #FF7F50; /* Coral */
+  --color-secondary: #FF6347; /* Tomato */
+  --color-accent: #FF4500; /* Orange Red */
+  --color-background-base: #FFF0F5; /* Lavender Blush */
+  --color-background-muted: #FFE4E1; /* Misty Rose */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #A52A2A; /* Brown */
+  --color-text-muted: #E9967A; /* Dark Salmon */
+  --color-text-inverted: #FFFFFF; /* White */
+  --color-border-base: #FFA07A; /* Light Salmon */
+  --color-border-muted: #FFDAB9; /* Peach Puff */
+  --color-success: #32CD32; /* Lime Green */
+  --color-warning: #FFD700; /* Gold */
+  --color-danger: #B22222; /* Firebrick */
+}

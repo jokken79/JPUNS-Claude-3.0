@@ -1,0 +1,16 @@
+:root.theme-forest {
+  --color-primary: #2F4F4F; /* Dark Slate Gray */
+  --color-secondary: #556B2F; /* Dark Olive Green */
+  --color-accent: #8B4513; /* Saddle Brown */
+  --color-background-base: #F5F5DC; /* Beige */
+  --color-background-muted: #FAFAD2; /* Light Goldenrod Yellow */
+  --color-background-highlight: #FFFFFF; /* White */
+  --color-text-base: #000000; /* Black */
+  --color-text-muted: #696969; /* Dim Gray */
+  --color-text-inverted: #FFFFFF; /* White */
+  --color-border-base: #D2B48C; /* Tan */
+  --color-border-muted: #F5DEB3; /* Wheat */
+  --color-success: #228B22; /* Forest Green */
+  --color-warning: #DAA520; /* Goldenrod */
+  --color-danger: #A52A2A; /* Brown */
+}
