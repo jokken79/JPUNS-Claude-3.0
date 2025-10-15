@@ -312,11 +312,13 @@ const DateBaseJP: React.FC = () => {
               
               {/* Page Size Selector */}
               <div className="page-size-selector">
-                <label className="page-size-label">表示件数:</label>
+                <label htmlFor="page-size-select" className="page-size-label">表示件数:</label>
                 <select
+                  id="page-size-select"
                   value={showAll ? 'all' : pageSize}
                   onChange={(e) => handlePageSizeChange(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
                   className="page-size-select"
+                  aria-label="表示件数を選択"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
