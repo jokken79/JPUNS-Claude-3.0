@@ -4,6 +4,41 @@ Historial de cambios del Sistema de Gestión de Personal UNS-ClaudeJP.
 
 ---
 
+## [3.1.0] - 2025-10-15
+
+### 🔄 Actualización de Dependencias
+
+#### Backend
+- ✅ FastAPI actualizado de 0.118.0 a 0.119.0
+- ✅ SQLAlchemy actualizado de 2.0.43 a 2.0.44
+- ✅ psycopg2-binary actualizado de 2.9.10 a 2.9.11
+- ✅ Alembic actualizado de 1.16.5 a 1.17.0
+- ✅ bcrypt actualizado de 4.0.1 a 5.0.0
+- ✅ Azure Computer Vision actualizado de 0.9.0 a 0.9.1
+- ✅ Pydantic actualizado de 2.11.10 a 2.12.2
+- ✅ NumPy actualizado a 2.3.x
+
+#### Frontend
+- ✅ React actualizado a 18.3.1
+- ✅ @headlessui/react actualizado de 1.7.19 a 2.2.9
+- ✅ @tanstack/react-query actualizado a 5.90.3
+- ✅ date-fns actualizado de 2.30.0 a 4.1.0
+- ✅ react-datepicker actualizado de 4.21.0 a 8.7.0
+- ✅ react-router-dom actualizado de 6.20.0 a 7.9.4
+- ✅ Recharts actualizado de 2.10.3 a 3.2.1
+- ✅ tailwind-merge actualizado de 2.1.0 a 3.3.1
+- ✅ Zustand actualizado de 4.4.7 a 5.0.8
+- ✅ TypeScript actualizado de 4.9.5 a 5.9.3
+- ✅ Tailwind CSS actualizado de 3.3.6 a 4.1.14
+- ✅ ESLint actualizado a 9.37.0
+- ✅ @testing-library/react actualizado a 16.3.0
+
+#### Security
+- 🔒 Actualizaciones de seguridad críticas en todas las dependencias
+- 🔒 Mejoras en cifrado y autenticación
+
+---
+
 ## [3.0.1] - 2025-10-12
 
 ### 🧹 Limpieza y Organización Masiva
