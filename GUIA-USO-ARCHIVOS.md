@@ -124,6 +124,13 @@ EJECUTAR PARA VERIFICAR AUTENTICACIÓN
 - **Propósito**: Verificar sistema de autenticación
 - **Cuándo ejecutar**: Cuando hay problemas de login
 
+#### 4. **PUSH-TO-GITHUB.bat** 📤
+```
+EJECUTAR PARA SINCRONIZAR CON GITHUB
+```
+- **Propósito**: Endar cambios al repositorio GitHub
+- **Cuándo ejecutar**: Después de hacer cambios importantes
+
 ### REINSTALACIÓN
 
 #### 1. **REINSTALAR.bat** 🔄

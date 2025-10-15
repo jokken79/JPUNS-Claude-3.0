@@ -72,6 +72,7 @@ LEER TERCERO ⬇️
 | **Ver logs** | [LOGS.bat](LOGS.bat) | Para investigar |
 | **Reiniciar** | [JpStart/restart-app.bat](JpStart/restart-app.bat) | Después de cambios |
 | **Detener** | [JpStart/stop-app.bat](JpStart/stop-app.bat) | Antes de apagar |
+| **GitHub** | [PUSH-TO-GITHUB.bat](PUSH-TO-GITHUB.bat) | Para sincronizar cambios |
 
 ---
 

@@ -73,6 +73,7 @@
 | **[BACKUP-BD.bat](BACKUP-BD.bat)** | Respaldo de base de datos | Antes de cambios importantes |
 | **[CARGAR-FABRICAS.bat](CARGAR-FABRICAS.bat)** | Cargar configuración de fábricas | Para configurar nuevas fábricas |
 | **[CHECK-AUTH.bat](CHECK-AUTH.bat)** | Verificar autenticación | Cuando hay problemas de login |
+| **[PUSH-TO-GITHUB.bat](PUSH-TO-GITHUB.bat)** | Sincronizar con GitHub | Después de hacer cambios |
 
 ---
 
