@@ -2,8 +2,6 @@ import React, { Suspense } from 'react';
 import useDashboardData from '../hooks/useDashboardData';
 import { StatsGridSkeleton, AlertSkeleton, ActivitySkeleton, FactoriesTableSkeleton } from '../components/skeletons/index';
 import ThemeSwitcher from '../components/ThemeSwitcher';
-import ThemeTest from '../components/ThemeTest';
-import ThemeDemo from '../components/ThemeDemo';
 import { useTheme } from '../context/ThemeContext';
 
 const StatsGrid = React.lazy(() => import('../components/dashboard/StatsGrid'));
@@ -103,12 +101,6 @@ const Dashboard: React.FC = () => {
       <Suspense fallback={<FactoriesTableSkeleton />}>
         {loading ? <FactoriesTableSkeleton /> : <TopFactories topFactories={topFactories} />}
       </Suspense>
-
-      {/* Theme Test Component */}
-      <ThemeTest />
-
-      {/* Theme Demo Component with Tailwind Classes */}
-      <ThemeDemo />
     </div>
   );
 };

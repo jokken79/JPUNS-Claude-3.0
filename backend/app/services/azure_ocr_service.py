@@ -164,13 +164,32 @@ class AzureOCRService:
 
         # --- MAIN PARSING LOOP ---
         for i, line in enumerate(lines):
-            # Name
+            # Name (detect both Kanji and Roman)
             if 'name_kanji' not in result and any(keyword in line for keyword in ['氏名', 'Name']):
                 name_match = re.search(r'氏名[：:\s]*(.+)', line)
                 if name_match and len(name_match.group(1).strip()) > 1:
-                    result['name_kanji'] = name_match.group(1).strip()
+                    name_text = name_match.group(1).strip()
+                    # Check if it's Roman letters (all uppercase or mixed case English)
+                    if re.match(r'^[A-Z][A-Z\s]+$', name_text):
+                        result['name_roman'] = name_text
+                        # AUTO-CONVERT to Katakana
+                        result['name_kana'] = self._convert_to_katakana(name_text)
+                        # ALSO set name_kanji so frontend displays the name
+                        result['name_kanji'] = name_text
+                        logger.info(f"OCR - Detected Roman name: {name_text}, converted to: {result['name_kana']}")
+                    else:
+                        result['name_kanji'] = name_text
                 elif i + 1 < len(lines) and not any(k in lines[i+1] for k in ['生年月日', '国籍', '性別']):
-                    result['name_kanji'] = lines[i+1].strip()
+                    name_text = lines[i+1].strip()
+                    # Check if it's Roman letters
+                    if re.match(r'^[A-Z][A-Z\s]+$', name_text):
+                        result['name_roman'] = name_text
+                        result['name_kana'] = self._convert_to_katakana(name_text)
+                        # ALSO set name_kanji so frontend displays the name
+                        result['name_kanji'] = name_text
+                        logger.info(f"OCR - Detected Roman name: {name_text}, converted to: {result['name_kana']}")
+                    else:
+                        result['name_kanji'] = name_text
 
             # Gender
             if 'gender' not in result and any(keyword in line for keyword in ['性別', 'Gender']):
@@ -191,13 +210,52 @@ class AzureOCRService:
                 elif i + 1 < len(lines):
                     result['address'] = lines[i+1].strip()
 
-            # Visa Status
-            if 'visa_status' not in result and any(keyword in line for keyword in ['在留資格', 'Status of residence']):
+            # Visa Status - IMPROVED DETECTION
+            if 'visa_status' not in result and any(keyword in line for keyword in ['在留資格', 'Status of residence', 'Status', '資格']):
                 status_match = re.search(r'在留資格[：:\s]*(.+)', line)
                 if status_match and status_match.group(1).strip():
-                    result['visa_status'] = status_match.group(1).strip()
+                    visa_text = status_match.group(1).strip()
+                    # Clean up visa status (remove dates, numbers at end)
+                    visa_text = re.sub(r'\d{4}[年/\-].*$', '', visa_text).strip()
+                    if visa_text and len(visa_text) > 2:
+                        result['visa_status'] = visa_text
+                        logger.info(f"OCR - Detected visa status: {visa_text}")
                 elif i + 1 < len(lines):
-                     result['visa_status'] = lines[i+1].strip()
+                    visa_text = lines[i+1].strip()
+                    # Clean up and validate
+                    visa_text = re.sub(r'\d{4}[年/\-].*$', '', visa_text).strip()
+                    if visa_text and len(visa_text) > 2 and not any(skip in visa_text for skip in ['Address', '住所', '番号']):
+                        result['visa_status'] = visa_text
+                        logger.info(f"OCR - Detected visa status (next line): {visa_text}")
+
+            # Residence Period (在留期間) - NEW DETECTION
+            if 'visa_period' not in result and any(keyword in line for keyword in ['在留期間', 'Period of stay', 'PERIOD OF STAY']):
+                # Try to extract period from same line first
+                period_match = re.search(r'在留期間[：:\s(（]*(.+)', line)
+                if period_match and period_match.group(1).strip():
+                    period_text = period_match.group(1).strip()
+                    # Common periods: 3年, 5年, 1年, 6ヶ月, etc.
+                    if re.search(r'\d+[年ヶか月]', period_text):
+                        # Extract just the period part (e.g., "3年" from "3年(2028年05月19日)")
+                        clean_period = re.search(r'(\d+[年ヶか月]+)', period_text)
+                        if clean_period:
+                            result['visa_period'] = clean_period.group(1)
+                            logger.info(f"OCR - Detected residence period: {result['visa_period']}")
+                # If not found, check next line
+                elif i + 1 < len(lines):
+                    period_text = lines[i+1].strip()
+                    # Skip if it's just English translation
+                    if 'PERIOD' in period_text.upper():
+                        # Try next line after that
+                        if i + 2 < len(lines):
+                            period_text = lines[i+2].strip()
+                    # Validate it looks like a period (e.g., "3年" or "5 years")
+                    if re.search(r'\d+[年ヶか月]', period_text):
+                        # Extract just the period part
+                        clean_period = re.search(r'(\d+[年ヶか月]+)', period_text)
+                        if clean_period:
+                            result['visa_period'] = clean_period.group(1)
+                            logger.info(f"OCR - Detected residence period (next line): {result['visa_period']}")
 
             # Card Number
             if 'zairyu_card_number' not in result and any(keyword in line for keyword in ['カード番号', '番号', 'Card No']):
@@ -576,10 +634,13 @@ class AzureOCRService:
             height, width = img_array.shape[:2]
             
             if document_type == "zairyu_card":
-                # For residence cards, photo is typically on the right 1/3 of the image
-                # Adjusted to include more area so face is not cut
-                photo_region = img_array[int(height*0.05):int(height*0.65),
-                                       int(width*0.60):int(width*0.98)]
+                # For residence cards, photo is on the right side of the card
+                # OPTIMIZED: Extract ONLY the photo rectangle (close zoom on face)
+                # Adjusted coordinates to capture just the photo area with minimal margins:
+                # - Height: 30% to 68% (tight crop on photo vertically)
+                # - Width: 65% to 92% (photo box on right side)
+                photo_region = img_array[int(height*0.30):int(height*0.68),
+                                       int(width*0.65):int(width*0.92)]
                 
                 # Convert back to PIL Image
                 photo_image = Image.fromarray(photo_region)
