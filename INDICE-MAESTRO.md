@@ -126,6 +126,7 @@
 - **[base-datos/01_init_database.sql](base-datos/01_init_database.sql)** - Script inicial de BD
 - **[base-datos/verify_database.py](base-datos/verify_database.py)** - Verificación de BD
 - **[docs/DATABASE-MANAGEMENT.md](docs/DATABASE-MANAGEMENT.md)** - Gestión de BD
+- **[EXPLICACION-BASE-DE-DATOS.md](EXPLICACION-BASE-DE-DATOS.md)** - Origen y creación de la BD
 
 ### Docker
 - **[docker-compose.yml](docker-compose.yml)** - Configuración Docker

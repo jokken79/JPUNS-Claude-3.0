@@ -119,6 +119,7 @@ SOLUCIÓN:
 ### 🔧 Documentos Técnicos
 - **[docs/DATABASE-MANAGEMENT.md](docs/DATABASE-MANAGEMENT.md)** - Gestión de BD
 - **[docs/technical/docker-readiness.md](docs/technical/docker-readiness.md)** - Docker
+- **[EXPLICACION-BASE-DE-DATOS.md](EXPLICACION-BASE-DE-DATOS.md)** - Origen y creación de la BD
 
 ---
 
