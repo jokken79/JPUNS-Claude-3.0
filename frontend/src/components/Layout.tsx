@@ -48,7 +48,7 @@ const Layout: React.FC = () => {
     { key: 'timerCards', name: 'タイムカード', href: '/timer-cards', icon: ClockIcon },
     { key: 'salary', name: '給与計算', href: '/salary', icon: CurrencyYenIcon },
     { key: 'requests', name: '申請管理', href: '/requests', icon: DocumentTextIcon },
-    { key: 'database', name: 'DateBaseJP', href: '/database', icon: ServerIcon },
+    { key: 'database', name: 'Database Manager', href: '/database', icon: ServerIcon },
     { key: 'adminer', name: 'Adminer DBJP', href: '/adminer', icon: ServerIcon },
   ];
 

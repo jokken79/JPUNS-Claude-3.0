@@ -17,7 +17,7 @@ import TimerCards from './pages/TimerCards';
 import Salary from './pages/Salary';
 import Requests from './pages/Requests';
 import ImportData from './pages/ImportData';
-import DateBaseJP from './pages/DateBaseJP';
+import DatabaseJP from './pages/DatabaseJP';
 import AdminerDBJP from './pages/AdminerDBJP';
 import RirekishoPrintView from './pages/RirekishoPrintView';
 import RirekishoPrintViewJPModif from './pages/RirekishoPrintViewJPModif';
@@ -233,7 +233,7 @@ function App() {
                 path="database"
                 element={
                   <VisibilityGuard pageKey="database">
-                    <DateBaseJP />
+                    <DatabaseJP />
                   </VisibilityGuard>
                 }
               />
