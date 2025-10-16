@@ -866,12 +866,83 @@
             return { furiganaValue, convertMessage };
         }
 
-        // Event Listener para el campo de nombre (氏名) que actualiza automáticamente フリガナ
+        // FUNCIÓN MEJORADA: Detectar y convertir automáticamente nombres extranjeros en romaji
+        function smartAutoUpdateFurigana(nameValue) {
+            const value = (nameValue || '').trim();
+            let convertMessage = '';
+            let furiganaValue = '';
+
+            if (!value) {
+                return { furiganaValue: '', convertMessage: '' };
+            }
+
+            // Detectar si es primarily romaji (más del 70% letras latinas)
+            const latinCharCount = (value.match(/[A-Za-z]/g) || []).length;
+            const totalChars = value.replace(/\s/g, '').length;
+            const latinRatio = totalChars > 0 ? latinCharCount / totalChars : 0;
+
+            // Si es principalmente romaji o completamente romaji, convertir a katakana
+            if (latinRatio >= 0.7 || /^[A-Za-z\s'-]+$/.test(value)) {
+                furiganaValue = convertRomajiToFurigana(value);
+                convertMessage = 'ローマ字からフリガナに自動変換しました';
+                
+                console.log(`Conversión inteligente: "${value}" -> "${furiganaValue}" (ratio: ${latinRatio})`);
+            }
+            // Si el nombre contiene Kana, copiar directamente
+            else if (/[\u3040-\u309F\u30A0-\u30FF]/.test(value)) {
+                furiganaValue = value;
+                convertMessage = 'カナをフリガナに設定しました';
+            }
+            // Si el nombre contiene Kanji, mantener como está
+            else if (/[\u4E00-\u9FAF]/.test(value)) {
+                furiganaValue = value;
+                convertMessage = '漢字のフリガナを手動で確認してください';
+            }
+            else {
+                furiganaValue = '';
+                convertMessage = '';
+            }
+
+            // Actualizar el campo フリガナ
+            const furiganaField = document.getElementById('name_furigana');
+            if (furiganaField) {
+                // Solo actualizar si el campo furigana está vacío o si el usuario no ha editado manualmente
+                if (!furiganaField.value || furiganaField.dataset.autoFilled === 'true') {
+                    furiganaField.value = furiganaValue;
+                    furiganaField.dataset.autoFilled = 'true';
+                }
+            }
+
+            const noteField = document.getElementById('ocr_note');
+            if (noteField && convertMessage) {
+                noteField.value = convertMessage;
+            }
+
+            return { furiganaValue, convertMessage };
+        }
+
+        // Event Listener para el campo de nombre (氏名) que actualiza automáticamente フリガna
         const nameKanjiInput = document.getElementById('name_kanji');
         if (nameKanjiInput) {
             nameKanjiInput.addEventListener('input', (event) => {
                 const nameValue = event.target.value;
-                autoUpdateFurigana(nameValue);
+                smartAutoUpdateFurigana(nameValue);
+            });
+        }
+
+        // Event Listener para el campo furigana para detectar ediciones manuales
+        const furiganaField = document.getElementById('name_furigana');
+        if (furiganaField) {
+            furiganaField.addEventListener('input', (event) => {
+                // Marcar que el usuario ha editado manualmente
+                furiganaField.dataset.autoFilled = 'false';
+            });
+            
+            // También detectar cuando el usuario cambia el foco (blur event)
+            furiganaField.addEventListener('blur', (event) => {
+                if (event.target.value.trim()) {
+                    furiganaField.dataset.autoFilled = 'false';
+                }
             });
         }
 

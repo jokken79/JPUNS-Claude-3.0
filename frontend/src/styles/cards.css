@@ -1,0 +1,666 @@
+/* ============================================
+   MODERN CARD SYSTEM
+   ============================================
+   Cards con glassmorphism y animaciones
+   ============================================ */
+
+/* ============================================
+   BASE CARD STYLES
+   ============================================ */
+.card {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-6);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+/* ============================================
+   CARD VARIANTS - Elevation
+   ============================================ */
+.card-flat {
+  box-shadow: none;
+  border: 1px solid var(--color-border);
+}
+
+.card-elevated {
+  box-shadow: var(--shadow-xl);
+}
+
+.card-elevated:hover {
+  box-shadow: var(--shadow-2xl);
+  transform: translateY(-6px);
+}
+
+/* ============================================
+   CARD VARIANTS - Glass Effect
+   ============================================ */
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.card-glass:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.card-glass-dark {
+  background: var(--glass-dark-bg);
+  backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--glass-dark-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ============================================
+   CARD VARIANTS - Gradient Border
+   ============================================ */
+.card-gradient-border {
+  position: relative;
+  background: var(--color-bg-primary);
+  border: none;
+}
+
+.card-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  padding: 2px;
+  background: var(--gradient-primary);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.card-gradient-accent::before {
+  background: var(--gradient-accent);
+}
+
+.card-gradient-success::before {
+  background: var(--gradient-success);
+}
+
+/* ============================================
+   CARD VARIANTS - Colored Cards
+   ============================================ */
+.card-primary {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.card-primary .card-title,
+.card-primary .card-subtitle {
+  color: white;
+}
+
+.card-accent {
+  background: var(--gradient-accent);
+  color: white;
+}
+
+.card-accent .card-title,
+.card-accent .card-subtitle {
+  color: white;
+}
+
+.card-success {
+  background: var(--gradient-success);
+  color: white;
+}
+
+.card-success .card-title,
+.card-success .card-subtitle {
+  color: white;
+}
+
+/* ============================================
+   CARD VARIANTS - Subtle Colored
+   ============================================ */
+.card-primary-subtle {
+  background: var(--primary-50);
+  border-left: 4px solid var(--primary-600);
+}
+
+.card-accent-subtle {
+  background: var(--accent-50);
+  border-left: 4px solid var(--accent-600);
+}
+
+.card-success-subtle {
+  background: var(--success-50);
+  border-left: 4px solid var(--success-600);
+}
+
+.card-warning-subtle {
+  background: var(--warning-50);
+  border-left: 4px solid var(--warning-500);
+}
+
+.card-error-subtle {
+  background: var(--error-50);
+  border-left: 4px solid var(--error-600);
+}
+
+/* ============================================
+   CARD STRUCTURE - Header
+   ============================================ */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.card-header-centered {
+  flex-direction: column;
+  text-align: center;
+  gap: var(--space-2);
+}
+
+.card-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: var(--gradient-primary);
+  color: white;
+  font-size: var(--text-2xl);
+  box-shadow: var(--shadow-md);
+}
+
+.card-icon-accent {
+  background: var(--gradient-accent);
+}
+
+.card-icon-success {
+  background: var(--gradient-success);
+}
+
+/* ============================================
+   CARD STRUCTURE - Body
+   ============================================ */
+.card-body {
+  margin-bottom: var(--space-4);
+}
+
+.card-content {
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+/* ============================================
+   CARD STRUCTURE - Footer
+   ============================================ */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  gap: var(--space-3);
+}
+
+.card-footer-centered {
+  justify-content: center;
+}
+
+.card-footer-end {
+  justify-content: flex-end;
+}
+
+/* ============================================
+   CARD LAYOUTS - Horizontal
+   ============================================ */
+.card-horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-6);
+}
+
+.card-horizontal .card-media {
+  flex-shrink: 0;
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
+
+.card-horizontal .card-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ============================================
+   CARD MEDIA - Images
+   ============================================ */
+.card-media-wrapper {
+  position: relative;
+  margin: calc(var(--space-6) * -1) calc(var(--space-6) * -1) var(--space-4);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  overflow: hidden;
+}
+
+.card-media {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.card:hover .card-media {
+  transform: scale(1.05);
+}
+
+.card-media-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: var(--space-6);
+  color: white;
+}
+
+/* ============================================
+   CARD BADGE/CHIP
+   ============================================ */
+.card-badge {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: var(--color-primary);
+  color: white;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+}
+
+.card-badge-success {
+  background: var(--color-success);
+}
+
+.card-badge-warning {
+  background: var(--color-warning);
+}
+
+.card-badge-error {
+  background: var(--color-error);
+}
+
+/* ============================================
+   CARD SIZES
+   ============================================ */
+.card-sm {
+  padding: var(--space-4);
+}
+
+.card-md {
+  padding: var(--space-6);
+}
+
+.card-lg {
+  padding: var(--space-8);
+}
+
+.card-xl {
+  padding: var(--space-12);
+}
+
+/* ============================================
+   CARD SPECIAL - Stats Card
+   ============================================ */
+.card-stat {
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.card-stat-value {
+  font-size: var(--text-5xl);
+  font-weight: var(--font-extrabold);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: var(--space-2);
+}
+
+.card-stat-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--font-medium);
+}
+
+.card-stat-change {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+}
+
+.card-stat-change.positive {
+  color: var(--color-success);
+}
+
+.card-stat-change.negative {
+  color: var(--color-error);
+}
+
+/* ============================================
+   CARD SPECIAL - Interactive Card
+   ============================================ */
+.card-interactive {
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.card-interactive:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: var(--shadow-2xl);
+}
+
+.card-interactive:active {
+  transform: translateY(-2px) scale(1);
+  transition: all var(--transition-fast);
+}
+
+/* ============================================
+   CARD SPECIAL - Pricing Card
+   ============================================ */
+.card-pricing {
+  text-align: center;
+  padding: var(--space-8);
+  position: relative;
+}
+
+.card-pricing-featured {
+  border: 2px solid var(--color-primary);
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.card-pricing-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-2);
+}
+
+.card-pricing-price {
+  font-size: var(--text-5xl);
+  font-weight: var(--font-extrabold);
+  color: var(--color-primary);
+  margin: var(--space-4) 0;
+}
+
+.card-pricing-period {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-normal);
+}
+
+.card-pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-6) 0;
+  text-align: left;
+}
+
+.card-pricing-features li {
+  padding: var(--space-2) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.card-pricing-features li::before {
+  content: '✓';
+  color: var(--color-success);
+  font-weight: var(--font-bold);
+  font-size: var(--text-lg);
+}
+
+/* ============================================
+   CARD SPECIAL - Profile Card
+   ============================================ */
+.card-profile {
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.card-profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-4);
+  border: 4px solid white;
+  box-shadow: var(--shadow-xl);
+  object-fit: cover;
+}
+
+.card-profile-name {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-1);
+}
+
+.card-profile-role {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+.card-profile-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.card-profile-stat {
+  text-align: center;
+}
+
+.card-profile-stat-value {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-primary);
+}
+
+.card-profile-stat-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+/* ============================================
+   CARD GRID - Layouts
+   ============================================ */
+.card-grid {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.card-grid-2 {
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+}
+
+.card-grid-compact {
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+/* ============================================
+   CARD ANIMATIONS
+   ============================================ */
+.card-fade-in {
+  animation: cardFadeIn var(--transition-slow) var(--ease-out);
+}
+
+.card-slide-up {
+  animation: cardSlideUp var(--transition-slow) var(--ease-out);
+}
+
+.card-scale-in {
+  animation: cardScaleIn var(--transition-base) var(--ease-spring);
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cardSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   CARD HOVER EFFECTS
+   ============================================ */
+.card-hover-lift:hover {
+  transform: translateY(-8px);
+}
+
+.card-hover-glow:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.3), var(--shadow-2xl);
+}
+
+.card-hover-tilt {
+  transition: transform var(--transition-base);
+}
+
+.card-hover-tilt:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+}
+
+/* ============================================
+   DARK MODE ADJUSTMENTS
+   ============================================ */
+[data-theme="dark"] .card {
+  background: var(--gray-800);
+  border-color: var(--gray-700);
+}
+
+[data-theme="dark"] .card-glass {
+  background: var(--glass-dark-bg);
+  border-color: var(--glass-dark-border);
+}
+
+[data-theme="dark"] .card-glass:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .card-header {
+  border-bottom-color: var(--gray-700);
+}
+
+[data-theme="dark"] .card-footer {
+  border-top-color: var(--gray-700);
+}
+
+[data-theme="dark"] .card-primary-subtle {
+  background: rgba(59, 130, 246, 0.1);
+  border-left-color: var(--primary-400);
+}
+
+[data-theme="dark"] .card-profile-avatar {
+  border-color: var(--gray-800);
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+@media (max-width: 768px) {
+  .card-horizontal {
+    flex-direction: column;
+  }
+
+  .card-horizontal .card-media {
+    width: 100%;
+    height: 200px;
+  }
+
+  .card-grid,
+  .card-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .card-pricing-featured {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: var(--space-4);
+  }
+
+  .card-lg,
+  .card-xl {
+    padding: var(--space-6);
+  }
+
+  .card-profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+}

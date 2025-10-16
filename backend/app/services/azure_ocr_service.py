@@ -8,6 +8,8 @@ import logging
 from typing import Dict, Any, Optional
 from pathlib import Path
 
+import numpy as np
+
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
 from msrest.authentication import CognitiveServicesCredentials
@@ -187,7 +189,7 @@ class AzureOCRService:
         lines = [line.strip() for line in raw_lines if line.strip()]
         normalized_lines = [re.sub(r'\s+', '', line) for line in lines]
         
-        # --- DATE PARSING ---
+        # --- DATE PARSING - JAPANESE FORMAT YYYY年MM月DD日 ---
         date_patterns = [
             r'(\d{4})[年/\-\.](\d{1,2})[月/\-\.](\d{1,2})日?',
             r'(\d{4})[/\-\.](\d{1,2})[/\-\.](\d{1,2})'
@@ -199,14 +201,19 @@ class AzureOCRService:
                     try:
                         year, month, day = [int(g) for g in match.groups()]
                         if 1 <= month <= 12 and 1 <= day <= 31:
-                            all_dates.append(f"{year}-{month:02d}-{day:02d}")
+                            # JAPANESE FORMAT: YYYY年MM月DD日
+                            formatted_date = f"{year}年{month:02d}月{day:02d}日"
+                            all_dates.append(formatted_date)
+                            logger.info(f"OCR - Found date: {formatted_date}")
                     except (ValueError, IndexError):
                         continue
-        
+
         if all_dates:
             result['birthday'] = all_dates[0]
+            logger.info(f"OCR - Set birthday: {result['birthday']}")
             if len(all_dates) > 1:
                 result['zairyu_expire_date'] = all_dates[-1]
+                logger.info(f"OCR - Set zairyu expiry: {result['zairyu_expire_date']}")
 
         # --- MAIN PARSING LOOP ---
         for i, line in enumerate(lines):
@@ -260,54 +267,78 @@ class AzureOCRService:
                 elif i + 1 < len(lines):
                     result['address'] = lines[i+1].strip()
 
-            # Visa Status - IMPROVED DETECTION
+            # Visa Status - IMPROVED DETECTION WITH KANJI EXTRACTION
             if 'visa_status' not in result and (
-                '在留資格' in normalized_line or 'STATUSOFRESIDENCE' in normalized_upper or '資格' in normalized_line
+                '在留資格' in normalized_line or 'STATUSOFRESIDENCE' in normalized_upper or 'STATUS' in normalized_upper or '資格' in normalized_line
             ):
+                # First, try to extract status from same line
                 status_match = re.search(r'在留資格[：:\s]*(.+)', line)
                 if status_match and status_match.group(1).strip():
                     visa_text = status_match.group(1).strip()
+                    # Remove English translation if present (e.g., "技能実習 Technical Intern Training")
+                    visa_text = re.sub(r'\s+[A-Za-z]+.*$', '', visa_text).strip()
                     # Clean up visa status (remove dates, numbers at end)
                     visa_text = re.sub(r'\d{4}[年/\-].*$', '', visa_text).strip()
                     if visa_text and len(visa_text) > 2:
                         result['visa_status'] = visa_text
-                        logger.info(f"OCR - Detected visa status: {visa_text}")
+                        logger.info(f"OCR - Detected visa status (same line): {visa_text}")
+                # If not found, check next lines (within 3 lines)
                 elif i + 1 < len(lines):
-                    visa_text = lines[i+1].strip()
-                    # Clean up and validate
-                    visa_text = re.sub(r'\d{4}[年/\-].*$', '', visa_text).strip()
-                    if visa_text and len(visa_text) > 2 and not any(skip in visa_text for skip in ['Address', '住所', '番号']):
-                        result['visa_status'] = visa_text
-                        logger.info(f"OCR - Detected visa status (next line): {visa_text}")
+                    for offset in range(1, 4):
+                        if i + offset >= len(lines):
+                            break
+                        candidate_line = lines[i + offset].strip()
+                        if not candidate_line:
+                            continue
+                        # Skip if it's just the English header
+                        if 'STATUS' in candidate_line.upper() and not any(jp in candidate_line for jp in ['在留', '資格']):
+                            continue
+                        # Remove English text (keep only Japanese Kanji)
+                        visa_text = re.sub(r'\s+[A-Za-z]+.*$', '', candidate_line).strip()
+                        # Clean up and validate
+                        visa_text = re.sub(r'\d{4}[年/\-].*$', '', visa_text).strip()
+                        if visa_text and len(visa_text) > 2 and not any(skip in visa_text for skip in ['Address', '住所', '番号', '在留期間', 'Period', 'PERIOD']):
+                            result['visa_status'] = visa_text
+                            logger.info(f"OCR - Detected visa status (next line +{offset}): {visa_text}")
+                            break
 
-            # Residence Period (在留期間) - NEW DETECTION
-            if 'visa_period' not in result and any(keyword in line for keyword in ['在留期間', 'Period of stay', 'PERIOD OF STAY']):
-                # Try to extract period from same line first
-                period_match = re.search(r'在留期間[：:\s(（]*(.+)', line)
+            # Residence Period (在留期間) - IMPROVED DETECTION
+            if 'visa_period' not in result and any(keyword in normalized_line for keyword in ['在留期間', 'PERIODOFSTAY', 'PERIOD']):
+                # First, try to extract period from same line
+                # Patterns: "在留期間 3年" or "在留期間(満了日) 2028年05月19日" or "在留期間: 5年"
+                period_match = re.search(r'在留期間[：:\s(（満了日）]*(.+)', line)
                 if period_match and period_match.group(1).strip():
                     period_text = period_match.group(1).strip()
+                    # Remove English text
+                    period_text = re.sub(r'[A-Za-z\s]+', '', period_text)
                     # Common periods: 3年, 5年, 1年, 6ヶ月, etc.
                     if re.search(r'\d+[年ヶか月]', period_text):
                         # Extract just the period part (e.g., "3年" from "3年(2028年05月19日)")
                         clean_period = re.search(r'(\d+[年ヶか月]+)', period_text)
                         if clean_period:
                             result['visa_period'] = clean_period.group(1)
-                            logger.info(f"OCR - Detected residence period: {result['visa_period']}")
-                # If not found, check next line
+                            logger.info(f"OCR - Detected residence period (same line): {result['visa_period']}")
+                # If not found, check next lines (within 3 lines)
                 elif i + 1 < len(lines):
-                    period_text = lines[i+1].strip()
-                    # Skip if it's just English translation
-                    if 'PERIOD' in period_text.upper():
-                        # Try next line after that
-                        if i + 2 < len(lines):
-                            period_text = lines[i+2].strip()
-                    # Validate it looks like a period (e.g., "3年" or "5 years")
-                    if re.search(r'\d+[年ヶか月]', period_text):
-                        # Extract just the period part
-                        clean_period = re.search(r'(\d+[年ヶか月]+)', period_text)
-                        if clean_period:
-                            result['visa_period'] = clean_period.group(1)
-                            logger.info(f"OCR - Detected residence period (next line): {result['visa_period']}")
+                    for offset in range(1, 4):
+                        if i + offset >= len(lines):
+                            break
+                        candidate_line = lines[i + offset].strip()
+                        if not candidate_line:
+                            continue
+                        # Skip if it's just English header
+                        if re.match(r'^[A-Za-z\s]+$', candidate_line):
+                            continue
+                        # Remove English text
+                        period_text = re.sub(r'[A-Za-z\s]+', '', candidate_line)
+                        # Validate it looks like a period (e.g., "3年" or "5ヶ月")
+                        if re.search(r'\d+[年ヶか月]', period_text):
+                            # Extract just the period part
+                            clean_period = re.search(r'(\d+[年ヶか月]+)', period_text)
+                            if clean_period:
+                                result['visa_period'] = clean_period.group(1)
+                                logger.info(f"OCR - Detected residence period (next line +{offset}): {result['visa_period']}")
+                                break
 
             # Card Number
             if 'zairyu_card_number' not in result and any(keyword in line for keyword in ['カード番号', '番号', 'Card No']):
@@ -417,13 +448,15 @@ class AzureOCRService:
                 elif i + 1 < len(lines):
                     result['name_kana'] = lines[i + 1].strip()
 
-            # Extract date of birth (生年月日)
+            # Extract date of birth (生年月日) - JAPANESE FORMAT
             if '生年月日' in line or 'BIRTH' in line_upper:
                 date_pattern = r'(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})'
                 match = re.search(date_pattern, line)
                 if match:
                     year, month, day = match.groups()
-                    result['birthday'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                    # JAPANESE FORMAT: YYYY年MM月DD日
+                    result['birthday'] = f"{year}年{int(month):02d}月{int(day):02d}日"
+                    logger.info(f"OCR - Detected birthday (license): {result['birthday']}")
 
             # Extract license number (免許証番号)
             if '免許証番号' in line or line_normalized.startswith('第'):
@@ -443,13 +476,15 @@ class AzureOCRService:
                 if types:
                     result['license_type'] = ', '.join(types)
 
-            # Extract expiry date (有効期限)
+            # Extract expiry date (有効期限) - JAPANESE FORMAT
             if '有効期限' in line or 'EXPIRY' in line_upper or '期限' in line:
                 date_pattern = r'(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})'
                 match = re.search(date_pattern, line)
                 if match:
                     year, month, day = match.groups()
-                    result['license_expire_date'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                    # JAPANESE FORMAT: YYYY年MM月DD日
+                    result['license_expire_date'] = f"{year}年{int(month):02d}月{int(day):02d}日"
+                    logger.info(f"OCR - Detected license expiry: {result['license_expire_date']}")
 
             # Extract address (住所)
             if '住所' in line or 'ADDRESS' in line_upper:
@@ -467,13 +502,15 @@ class AzureOCRService:
                     if address_parts:
                         result['address'] = ' '.join(address_parts)
 
-            # Extract issuing date (交付年月日)
+            # Extract issuing date (交付年月日) - JAPANESE FORMAT
             if '交付' in line or 'ISSUED' in line_upper:
                 date_pattern = r'(\d{4})[年/\-.](\d{1,2})[月/\-.](\d{1,2})'
                 match = re.search(date_pattern, line)
                 if match:
                     year, month, day = match.groups()
-                    result['license_issue_date'] = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                    # JAPANESE FORMAT: YYYY年MM月DD日
+                    result['license_issue_date'] = f"{year}年{int(month):02d}月{int(day):02d}日"
+                    logger.info(f"OCR - Detected license issue date: {result['license_issue_date']}")
 
         # Fallbacks using entire text
         if 'license_number' not in result:
@@ -506,12 +543,81 @@ class AzureOCRService:
         return result
 
     def _convert_to_katakana(self, text: str) -> str:
-        """Convert text to Katakana using basic patterns"""
+        """Convert romaji text to Katakana using pykakasi library"""
+        try:
+            import pykakasi
+
+            # Initialize pykakasi converter
+            kks = pykakasi.kakasi()
+
+            # Convert romaji to katakana
+            # pykakasi works best with proper capitalization
+            result = kks.convert(text)
+
+            # Extract katakana from result
+            katakana_parts = []
+            for item in result:
+                # pykakasi returns dict with 'kana' key containing katakana
+                if 'kana' in item:
+                    katakana_parts.append(item['kana'])
+                elif 'orig' in item:
+                    # Fallback to original if conversion failed
+                    katakana_parts.append(item['orig'])
+
+            katakana_result = ''.join(katakana_parts)
+
+            logger.info(f"OCR - Converted '{text}' to katakana: '{katakana_result}'")
+            return katakana_result
+
+        except ImportError:
+            logger.warning("OCR - pykakasi not available, using fallback conversion")
+            # Fallback to manual conversion if pykakasi not installed
+            return self._convert_to_katakana_fallback(text)
+        except Exception as e:
+            logger.error(f"OCR - Error converting to katakana: {e}")
+            return self._convert_to_katakana_fallback(text)
+
+    def _convert_to_katakana_fallback(self, text: str) -> str:
+        """Fallback conversion using manual mapping"""
         import re
-        
-        # Extended conversion patterns for Vietnamese names and common Japanese names
-        # This is a simplified version - in production you'd use a proper library
+
+        # Manual conversion map for common names when pykakasi fails
         conversion_map = {
+            # Portuguese/Brazilian names (common)
+            'DIEGO': 'ディエゴ',
+            'BOLZAN': 'ボルザン',
+            'PASSOS': 'パソス',
+            'DOS': 'ドス',
+            'DA': 'ダ',
+            'DE': 'デ',
+            'SILVA': 'シルバ',
+            'SANTOS': 'サントス',
+            'OLIVEIRA': 'オリベイラ',
+            'SOUZA': 'ソウザ',
+            'LIMA': 'リマ',
+            'COSTA': 'コスタ',
+            'PEREIRA': 'ペレイラ',
+            'RODRIGUES': 'ロドリゲス',
+            'FERNANDES': 'フェルナンデス',
+            'GOMES': 'ゴメス',
+            'MARTINS': 'マルティンス',
+            'ALVES': 'アルベス',
+            'RIBEIRO': 'リベイロ',
+            'CARVALHO': 'カルバーリョ',
+            'CARLOS': 'カルロス',
+            'JOSE': 'ホセ',
+            'MARIA': 'マリア',
+            'JOAO': 'ジョアン',
+            'PEDRO': 'ペドロ',
+            'PAULO': 'パウロ',
+            'LUCAS': 'ルカス',
+            'RAFAEL': 'ラファエル',
+            'GABRIEL': 'ガブリエル',
+            'FERNANDO': 'フェルナンド',
+            'RICARDO': 'リカルド',
+            'ANDERSON': 'アンデルソン',
+            'ROBERTO': 'ロベルト',
+
             # Vietnamese names (from your examples)
             'MAI': 'マイ',
             'TU': 'トゥ',
@@ -755,110 +861,147 @@ class AzureOCRService:
         return result
 
     def _extract_photo_from_document(self, image_data: bytes, document_type: str) -> Optional[str]:
-        """Extract photo from document image"""
+        """Extract photo from document image using enhanced face detection."""
         try:
-            # Import required libraries
+            # Intentar usar el nuevo servicio mejorado de detección facial
+            try:
+                from app.services.face_detection_service import face_detection_service
+                logger.info("OCR - Usando servicio mejorado de detección facial")
+                
+                result = face_detection_service.extract_face_from_document(image_data, document_type)
+                if result:
+                    logger.info("OCR - ✅ Rostro extraído exitosamente con nuevo servicio")
+                    return result
+                else:
+                    logger.warning("OCR - Nuevo servicio no detectó rostro, usando método original")
+                    
+            except ImportError:
+                logger.warning("OCR - Servicio de detección facial no disponible, usando método original")
+            except Exception as e:
+                logger.warning(f"OCR - Error con nuevo servicio: {e}, usando método original")
+            
+            # Método original como fallback (sin cambios para mantener compatibilidad)
+            return self._extract_photo_original_method(image_data, document_type)
+            
+        except Exception as e:
+            logger.error(f"Error extracting photo with face detection: {e}", exc_info=True)
+            # Fallback to returning the full image in case of any error
+            import base64
+            base64_image = base64.b64encode(image_data).decode('utf-8')
+            return f"data:image/jpeg;base64,{base64_image}"
+    
+    def _extract_photo_original_method(self, image_data: bytes, document_type: str) -> Optional[str]:
+        """Método original de extracción de foto mantenido como fallback"""
+        try:
             import base64
             from io import BytesIO
             from PIL import Image
             import numpy as np
-            try:  # OpenCV is optional for face detection
-                import cv2  # type: ignore
-            except ImportError:  # pragma: no cover - optional dependency at runtime
-                cv2 = None  # type: ignore
+            import cv2
 
-            # Convert bytes to PIL Image
             image = Image.open(BytesIO(image_data)).convert("RGB")
-
-            # Convert to numpy array for processing
             img_array = np.array(image)
-            if img_array.ndim == 2:  # grayscale to RGB
-                img_array = np.stack([img_array] * 3, axis=-1)
+            gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+            
+            # Correct path to the Haar Cascade file
+            cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+            if not os.path.exists(cascade_path):
+                logger.error(f"Haar Cascade file not found at: {cascade_path}")
+                # Fallback to fixed coordinates if cascade is missing
+                return self._extract_photo_with_fixed_coordinates(img_array, document_type, image_data)
+
+            face_cascade = cv2.CascadeClassifier(cascade_path)
+            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(100, 100))
+
+            if len(faces) > 0:
+                # Assume the largest detected face is the correct one
+                (x, y, w, h) = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)[0]
+                
+                # Add padding to capture the whole head
+                padding_y = int(h * 0.3)
+                padding_x = int(w * 0.2)
+                
+                y1 = max(0, y - padding_y)
+                y2 = min(img_array.shape[0], y + h + padding_y)
+                x1 = max(0, x - padding_x)
+                x2 = min(img_array.shape[1], x + w + padding_x)
+                
+                face_region = img_array[y1:y2, x1:x2]
+                logger.info(f"OCR - ✅ Face detected at (x={x}, y={y}, w={w}, h={h}). Cropped region: y={y1}-{y2}, x={x1}-{x2}")
+                
+                # Resize to a standard size
+                photo_image = Image.fromarray(face_region)
+                photo_image = photo_image.resize((300, 400), Image.Resampling.LANCZOS)
+
+            else:
+                logger.warning(f"OCR - No face detected in {document_type}. Falling back to fixed coordinates.")
+                return self._extract_photo_with_fixed_coordinates(img_array, document_type, image_data)
+
+            buffered = BytesIO()
+            photo_image.save(buffered, format="JPEG", quality=95)
+            base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            return f"data:image/jpeg;base64,{base64_image}"
+
+        except Exception as e:
+            logger.error(f"Error extracting photo with original method: {e}", exc_info=True)
+            # Fallback to fixed coordinates
+            try:
+                import base64
+                from io import BytesIO
+                from PIL import Image
+                import numpy as np
+                
+                image = Image.open(BytesIO(image_data)).convert("RGB")
+                img_array = np.array(image)
+                return self._extract_photo_with_fixed_coordinates(img_array, document_type, image_data)
+            except:
+                # Último fallback - imagen completa
+                import base64
+                base64_image = base64.b64encode(image_data).decode('utf-8')
+                return f"data:image/jpeg;base64,{base64_image}"
+
+    def _extract_photo_with_fixed_coordinates(self, img_array: np.ndarray, document_type: str, image_data: bytes) -> str:
+        """Fallback method to extract photo using fixed coordinates."""
+        try:
+            import base64
+            from io import BytesIO
+            from PIL import Image
 
             height, width = img_array.shape[:2]
-
-            # Prepare face detector
             face_region = None
-            try:
-                if cv2 is not None:
-                    cascade_path = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
-                    face_cascade = cv2.CascadeClassifier(str(cascade_path)) if cascade_path.exists() else None
-                    if face_cascade is not None and not face_cascade.empty():
-                        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-                        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(80, 80))
-                        if len(faces) > 0:
-                            # Pick the largest detected face
-                            x, y, w, h = max(faces, key=lambda rect: rect[2] * rect[3])
-                            margin_x = int(w * 0.25)
-                            margin_y = int(h * 0.25)
-                            x1 = max(0, x - margin_x)
-                            y1 = max(0, y - margin_y)
-                            x2 = min(width, x + w + margin_x)
-                            y2 = min(height, y + h + margin_y)
-                            if x2 > x1 and y2 > y1:
-                                face_region = img_array[y1:y2, x1:x2]
-                                logger.info(
-                                    "OCR - Face detected for %s (x1=%s, y1=%s, x2=%s, y2=%s)",
-                                    document_type, x1, y1, x2, y2,
-                                )
-            except Exception as face_error:  # pragma: no cover - best effort logging
-                logger.warning(
-                    "OCR - Face detection failed, using heuristic crop: %s",
-                    face_error,
-                    exc_info=True,
-                )
 
-            if face_region is None:
-                # Heuristic fallback by document type
-                if document_type == "zairyu_card":
-                    y1 = int(height * 0.22)
-                    y2 = int(height * 0.80)
-                    x1 = int(width * 0.62)
-                    x2 = int(width * 0.93)
-                    face_region = img_array[max(0, y1):min(height, y2), max(0, x1):min(width, x2)]
-                    logger.info("OCR - Fallback zairyu photo crop applied")
-                elif document_type == "license":
-                    y1 = int(height * 0.20)
-                    y2 = int(height * 0.78)
-                    x1 = int(width * 0.05)
-                    x2 = int(width * 0.35)
-                    face_region = img_array[max(0, y1):min(height, y2), max(0, x1):min(width, x2)]
-                    logger.info("OCR - Fallback license photo crop applied")
-                else:
-                    face_region = img_array
-                    logger.info("OCR - Returning full image for %s", document_type)
+            if document_type == "zairyu_card":
+                y1 = int(height * 0.15)
+                y2 = int(height * 0.60)
+                x1 = int(width * 0.70)
+                x2 = int(width * 0.95)
+                face_region = img_array[max(0, y1):min(height, y2), max(0, x1):min(width, x2)]
+                logger.info(f"OCR - Fallback to FIXED Zairyu coordinates: y={y1}-{y2}, x={x1}-{x2}")
+            
+            elif document_type == "license":
+                y1 = int(height * 0.20)
+                y2 = int(height * 0.78)
+                x1 = int(width * 0.05)
+                x2 = int(width * 0.35)
+                face_region = img_array[max(0, y1):min(height, y2), max(0, x1):min(width, x2)]
+                logger.info("OCR - Fallback to FIXED license coordinates.")
 
-            if face_region.size == 0:
+            if face_region is None or face_region.size == 0:
+                logger.warning("OCR - Fixed coordinate cropping resulted in an empty image. Returning full image.")
                 face_region = img_array
 
-            # Convert back to PIL Image
             photo_image = Image.fromarray(face_region)
-
-            # Convert to base64
             buffered = BytesIO()
             photo_image.save(buffered, format="JPEG", quality=90)
             base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            return f"data:image/jpeg;base64,{base64_image}"
 
-            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
-            return photo_data_uri
-
-        except ImportError:
-            # If PIL is not available, return full image
-            import base64
-            from io import BytesIO
-            base64_image = base64.b64encode(image_data).decode('utf-8')
-            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
-            logger.warning(f"OCR - PIL not available, returning full image from {document_type}")
-            return photo_data_uri
-            
         except Exception as e:
-            logger.error(f"Error extracting photo: {e}")
-            # Fallback: return full image
+            logger.error(f"Error in fallback photo extraction: {e}", exc_info=True)
             import base64
-            from io import BytesIO
             base64_image = base64.b64encode(image_data).decode('utf-8')
-            photo_data_uri = f"data:image/jpeg;base64,{base64_image}"
-            return photo_data_uri
+            return f"data:image/jpeg;base64,{base64_image}"
+
 
 
 # Create singleton instance

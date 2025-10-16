@@ -1,3 +1,17 @@
+/* ============================================
+   MODERN DESIGN SYSTEM - Imports
+   ============================================ */
+
+/* 1. Design System Foundation */
+@import "./styles/design-system.css";
+
+/* 2. Component Styles */
+@import "./styles/buttons.css";
+@import "./styles/cards.css";
+@import "./styles/tables.css";
+@import "./styles/forms.css";
+
+/* 3. Theme Variations */
 @import "./styles/themes/theme-default.css";
 @import "./styles/themes/theme-dark.css";
 @import "./styles/themes/theme-corporate.css";
@@ -13,8 +27,12 @@
 @import "./styles/themes/theme-earth.css";
 @import "./styles/themes/theme-royal.css";
 @import "./styles/themes/theme-sakura.css";
+
+/* 4. Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&display=swap');
 
+/* 5. Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

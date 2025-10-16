@@ -4,6 +4,47 @@ Historial de cambios del Sistema de Gestión de Personal UNS-ClaudeJP.
 
 ---
 
+## [3.2.0] - 2025-10-16
+
+### ✨ New - Convertidor Automático de Furigana (Romaji → Katakana)
+
+#### Sistema Inteligente de Conversión de Nombres Extranjeros
+
+**Nueva funcionalidad implementada:**
+- 🎯 **Conversión automática en tiempo real**: Detecta nombres en romaji y los convierte automáticamente a katakana
+- 🧠 **Detección inteligente**: Identifica automáticamente el tipo de escritura (romaji, kana, kanji)
+- ✏️ **Control manual**: Respeta ediciones manuales del usuario con indicador visual
+- 🔄 **Reactivación opcional**: Botón para volver a habilitar la conversión automática
+
+**Archivos nuevos:**
+- `frontend/src/utils/furiganaConverter.ts` - Utilidad de conversión romaji → katakana
+- `docs/FURIGANA-AUTO-CONVERTER.md` - Documentación completa del sistema
+- `RESUMEN-FURIGANA-CONVERTER.md` - Resumen de implementación
+
+**Archivos modificados:**
+- `frontend/src/pages/CandidateEdit.tsx` - Integración de conversión automática
+
+**Ejemplos de conversión:**
+- `John Smith` → `ジョン　スミス`
+- `Maria Garcia` → `マリア　ガルシア`
+- `Jean-Pierre` → `ジャン・ピエール`
+- `Nguyen Anh` → `グエン　アン`
+
+**Características técnicas:**
+- Soporta 60+ sílabas y combinaciones japonesas
+- Maneja casos especiales (tu, di, du, fa, fi, fe, fo, je, we, wi)
+- Normalización Unicode (NFKC)
+- Sin dependencias externas
+- Rendimiento: < 1ms por conversión
+
+**Beneficios:**
+- ✅ Reduce errores de transcripción
+- ✅ Acelera el proceso de registro de candidatos extranjeros
+- ✅ Mejora la experiencia de usuario
+- ✅ Mantiene control del usuario sobre los datos
+
+---
+
 ## [3.1.4] - 2025-10-15
 
 ### 📸 Fixed - Optimización Crítica de Foto

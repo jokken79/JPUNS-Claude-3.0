@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { faker } from '@faker-js/faker';
 import OCRUploader from '../components/OCRUploader';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { smartAutoUpdateFurigana } from '../utils/furiganaConverter';
 
 // A simplified candidate type for the form state
 type CandidateFormData = {
@@ -20,6 +21,7 @@ const CandidateForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isNew, setIsNew] = useState(true);
   const [showOCRUploader, setShowOCRUploader] = useState(false);
+  const [furiganaEditedManually, setFuriganaEditedManually] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -46,6 +48,28 @@ const CandidateForm: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Si estamos editando el campo de nombre kanji
+    if (name === 'full_name_kanji') {
+      // Convertir automáticamente a furigana si no se ha editado manualmente
+      if (!furiganaEditedManually || !candidate.full_name_kana) {
+        const { furiganaValue } = smartAutoUpdateFurigana(value);
+        if (furiganaValue) {
+          setCandidate(prev => ({ 
+            ...prev, 
+            [name]: value,
+            full_name_kana: furiganaValue 
+          }));
+          return;
+        }
+      }
+    }
+    
+    // Si estamos editando el campo de furigana, marcar como editado manualmente
+    if (name === 'full_name_kana' && value.trim()) {
+      setFuriganaEditedManually(true);
+    }
+    
     setCandidate(prev => ({ ...prev, [name]: value }));
   };
 
@@ -125,6 +149,8 @@ const CandidateForm: React.FC = () => {
     if (ocrData.nationality) mappedData.nationality = ocrData.nationality;
     const residenceStatus = ocrData.residence_status || ocrData.visa_status;
     if (residenceStatus) mappedData.residence_status = residenceStatus;
+    const visaPeriod = ocrData.visa_period;
+    if (visaPeriod) mappedData.visa_period = visaPeriod;
     const residenceExpiry = ocrData.residence_expiry || ocrData.zairyu_expire_date;
     if (residenceExpiry) mappedData.residence_expiry = residenceExpiry;
     const residenceCardNumber = ocrData.residence_card_number || ocrData.zairyu_card_number;
@@ -254,7 +280,9 @@ const CandidateForm: React.FC = () => {
                 />
             </div>
             <div>
-                <label htmlFor="full_name_kana" className="block text-sm font-medium text-gray-700">フリガナ (Kana)</label>
+                <label htmlFor="full_name_kana" className="block text-sm font-medium text-gray-700">
+                    フリガナ (Kana) {furiganaEditedManually && <span className="text-xs text-gray-500">(編集済み)</span>}
+                </label>
                 <input
                     type="text"
                     name="full_name_kana"
@@ -263,6 +291,15 @@ const CandidateForm: React.FC = () => {
                     onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
+                {furiganaEditedManually && (
+                    <button
+                        type="button"
+                        onClick={() => setFuriganaEditedManually(false)}
+                        className="mt-2 px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                    >
+                        フリガナ自動変換を有効にする
+                    </button>
+                )}
             </div>
         </div>
 
@@ -274,7 +311,7 @@ const CandidateForm: React.FC = () => {
             </div>
             <div>
                 <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700">生年月日 (Date of Birth)</label>
-                <input type="date" name="date_of_birth" id="date_of_birth" value={candidate.date_of_birth?.split('T')[0] || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                <input type="text" name="date_of_birth" id="date_of_birth" value={candidate.date_of_birth || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="YYYY年MM月DD日" />
             </div>
             <div>
                 <label htmlFor="gender" className="block text-sm font-medium text-gray-700">性別 (Gender)</label>
@@ -327,8 +364,12 @@ const CandidateForm: React.FC = () => {
                     <input type="text" name="residence_status" id="residence_status" value={candidate.residence_status || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
                 </div>
                 <div>
-                    <label htmlFor="residence_expiry" className="block text-sm font-medium text-gray-700">在留期限 (Visa Expiry)</label>
-                    <input type="date" name="residence_expiry" id="residence_expiry" value={candidate.residence_expiry?.split('T')[0] || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <label htmlFor="visa_period" className="block text-sm font-medium text-gray-700">在留期間 (Period of Stay)</label>
+                    <input type="text" name="visa_period" id="visa_period" value={candidate.visa_period || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="例: 3年, 5年" />
+                </div>
+                <div>
+                    <label htmlFor="residence_expiry" className="block text-sm font-medium text-gray-700">在留期間満了日 (Residence Expiry)</label>
+                    <input type="text" name="residence_expiry" id="residence_expiry" value={candidate.residence_expiry || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="YYYY年MM月DD日" />
                 </div>
                 <div className="md:col-span-2">
                     <label htmlFor="residence_card_number" className="block text-sm font-medium text-gray-700">在留カード番号 (Residence Card No.)</label>
@@ -340,7 +381,7 @@ const CandidateForm: React.FC = () => {
                 </div>
                 <div>
                     <label htmlFor="passport_expiry" className="block text-sm font-medium text-gray-700">パスポート期限 (Passport Expiry)</label>
-                    <input type="date" name="passport_expiry" id="passport_expiry" value={candidate.passport_expiry?.split('T')[0] || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <input type="text" name="passport_expiry" id="passport_expiry" value={candidate.passport_expiry || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="YYYY年MM月DD日" />
                 </div>
                  <div>
                     <label htmlFor="license_number" className="block text-sm font-medium text-gray-700">運転免許番号 (Driver's License No.)</label>
@@ -348,7 +389,7 @@ const CandidateForm: React.FC = () => {
                 </div>
                 <div>
                     <label htmlFor="license_expiry" className="block text-sm font-medium text-gray-700">運転免許期限 (License Expiry)</label>
-                    <input type="date" name="license_expiry" id="license_expiry" value={candidate.license_expiry?.split('T')[0] || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <input type="text" name="license_expiry" id="license_expiry" value={candidate.license_expiry || ''} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="YYYY年MM月DD日" />
                 </div>
             </div>
         </div>
